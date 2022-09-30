@@ -38,8 +38,8 @@ func TestLexerValid(t *testing.T) {
 			`select (identifier "foo") from (identifier "bar") where (identifier "x") ne (string "hello") or (identifier "y") ne (string "ciao")`,
 		},
 		{
-			"select foo.x, bar.y from foo left outer join bar",
-			`select (identifier "foo") dot (identifier "x") comma (identifier "bar") dot (identifier "y") from (identifier "foo") left outer join (identifier "bar")`,
+			"select foo.x, bar.y from foo left outer join bar on foo.x = bar.x",
+			`select (identifier "foo") dot (identifier "x") comma (identifier "bar") dot (identifier "y") from (identifier "foo") left outer join (identifier "bar") on (identifier "foo") dot (identifier "x") eq (identifier "bar") dot (identifier "x")`,
 		},
 	}
 	for _, c := range cases {

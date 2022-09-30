@@ -41,6 +41,7 @@ const (
 	TokenTypeRight
 	TokenTypeOuter
 	TokenTypeJoin
+	TokenTypeOn
 )
 
 var tokenTypeNames = map[TokenType]string{
@@ -71,6 +72,7 @@ var tokenTypeNames = map[TokenType]string{
 	TokenTypeRight:      "right",
 	TokenTypeOuter:      "outer",
 	TokenTypeJoin:       "join",
+	TokenTypeOn:         "on",
 }
 
 func (t TokenType) String() string {
@@ -93,6 +95,7 @@ var keywordMap = map[string]TokenType{
 	"right":  TokenTypeRight,
 	"outer":  TokenTypeOuter,
 	"join":   TokenTypeJoin,
+	"on":     TokenTypeOn,
 }
 
 var punctuationMap = map[string]TokenType{
