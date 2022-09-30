@@ -55,15 +55,24 @@ func TestLexerValid(t *testing.T) {
 	}
 }
 
-func TestLexerInvalid(t *testing.T) {
-	cases := []string{
-		"select foo,, bar from baz",
-		"select % from foo",
+func TestLexerError(t *testing.T) {
+	cases := []struct {
+		input string
+		want  SyntaxError
+	}{
+		{
+			"select foo,, bar from baz",
+			SyntaxError{Position: 10, Msg: `invalid SQL: ",,"`},
+		},
+		{
+			"select % from foo",
+			SyntaxError{Position: 7, Msg: `unexpected character: '%'`},
+		},
 	}
-	for _, input := range cases {
-		_, err := Tokenize(input)
-		if err == nil {
-			t.Errorf("Tokenize(%q) did not return error", input)
+	for _, c := range cases {
+		_, err := Tokenize(c.input)
+		if err != c.want {
+			t.Errorf("Tokenize(%q) returned\n%#v, want\n%#v", c.input, err, c.want)
 		}
 	}
 }

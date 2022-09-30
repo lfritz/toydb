@@ -5,7 +5,7 @@ func Parse(input string) (Statement, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ParseTokens(&TokenList{tokens})
+	return ParseTokens(&TokenList{input, tokens})
 }
 
 func ParseTokens(tokens *TokenList) (Statement, error) {

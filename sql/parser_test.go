@@ -44,17 +44,32 @@ func TestParserValid(t *testing.T) {
 	}
 }
 
-func TestParserInvalid(t *testing.T) {
-	cases := []string{
-		"",
-		"select % from foo",
-		"hello x from foo",
-		"select x, from foo",
+func TestParserError(t *testing.T) {
+	cases := []struct {
+		input string
+		want  SyntaxError
+	}{
+		{
+			"",
+			SyntaxError{Position: 0, Msg: `unexpected end of input`},
+		},
+		{
+			"select % from foo",
+			SyntaxError{Position: 7, Msg: `unexpected character: '%'`},
+		},
+		{
+			"hello x from foo",
+			SyntaxError{Position: 0, Msg: `got "hello", expected select`},
+		},
+		{
+			"select x, from foo",
+			SyntaxError{Position: 10, Msg: `got "from", expected star or identifier`},
+		},
 	}
-	for _, input := range cases {
-		_, err := Parse(input)
-		if err == nil {
-			t.Errorf("Parse(%q) did not return error", input)
+	for _, c := range cases {
+		_, err := Parse(c.input)
+		if err != c.want {
+			t.Errorf("Parse(%q) returned \n%#v, want\n%#v", c.input, err, c.want)
 		}
 	}
 }

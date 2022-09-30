@@ -112,9 +112,9 @@ var punctuationMap = map[string]TokenType{
 }
 
 type Token struct {
-	// TODO include line & column number in Token
-	Type TokenType
-	Text string
+	Type     TokenType
+	Text     string
+	From, To int
 }
 
 func (t Token) String() string {

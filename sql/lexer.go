@@ -55,7 +55,7 @@ func (l *Lexer) Run() ([]Token, error) {
 			case isPunctuation(r):
 				l.changeState(LexerStatePunctuation)
 			default:
-				l.errorf("unexpected character: '%c'", r)
+				l.errorf(l.next, "unexpected character: '%c'", r)
 			}
 		case LexerStateWord:
 			switch {
@@ -67,7 +67,7 @@ func (l *Lexer) Run() ([]Token, error) {
 				l.tokenForWord()
 				l.changeState(LexerStatePunctuation)
 			default:
-				l.errorf("unexpected character: %c", r)
+				l.errorf(l.next, "unexpected character: %c", r)
 			}
 		case LexerStateNumber:
 			switch {
@@ -79,7 +79,7 @@ func (l *Lexer) Run() ([]Token, error) {
 				l.tokenForNumber()
 				l.changeState(LexerStatePunctuation)
 			default:
-				l.errorf("unexpected character: %c", r)
+				l.errorf(l.next, "unexpected character: %c", r)
 			}
 		case LexerStateString:
 			switch {
@@ -104,7 +104,7 @@ func (l *Lexer) Run() ([]Token, error) {
 				l.tokenForPunctuation()
 				l.changeState(LexerStateStart)
 			default:
-				l.errorf("unexpected character: %c", r)
+				l.errorf(l.next, "unexpected character: %c", r)
 			}
 		default:
 			panic(fmt.Sprintf("Unexpected state: %v", l.state))
@@ -121,6 +121,8 @@ func (l *Lexer) addToken(from, to int, typ TokenType) {
 	token := Token{
 		Text: string(l.input[from:to]),
 		Type: typ,
+		From: from,
+		To:   to,
 	}
 	l.tokens = append(l.tokens, token)
 }
@@ -130,9 +132,11 @@ func (l *Lexer) changeState(s LexerState) {
 	l.from = l.next
 }
 
-func (l *Lexer) errorf(format string, a ...any) {
-	// TODO include line & column number in error msg
-	l.err = fmt.Errorf(format, a...)
+func (l *Lexer) errorf(position int, format string, a ...any) {
+	l.err = SyntaxError{
+		Position: position,
+		Msg:      fmt.Sprintf(format, a...),
+	}
 }
 
 func (l *Lexer) tokenForNumber() {
@@ -158,7 +162,7 @@ func (l *Lexer) tokenForPunctuation() {
 	text := string(l.input[l.from:l.next])
 	tokenType, ok := punctuationMap[text]
 	if !ok {
-		l.errorf("syntax error at %q", text)
+		l.errorf(l.from, "invalid SQL: %q", text)
 		return
 	}
 	l.addToken(l.from, l.next, tokenType)
