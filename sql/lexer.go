@@ -136,6 +136,7 @@ var punctuationMap = map[string]TokenType{
 }
 
 type Token struct {
+	// TODO include line & column number in Token
 	Type TokenType
 	Text string
 }
@@ -258,8 +259,12 @@ func (l *Lexer) Run() ([]Token, error) {
 	}
 }
 
-func (l *Lexer) produceToken(t Token) {
-	l.tokens = append(l.tokens, t)
+func (l *Lexer) addToken(from, to int, typ TokenType) {
+	token := Token{
+		Text: string(l.input[from:to]),
+		Type: typ,
+	}
+	l.tokens = append(l.tokens, token)
 }
 
 func (l *Lexer) changeState(s LexerState) {
@@ -268,50 +273,37 @@ func (l *Lexer) changeState(s LexerState) {
 }
 
 func (l *Lexer) errorf(format string, a ...any) {
+	// TODO include line & column number in error msg
 	l.err = fmt.Errorf(format, a...)
 }
 
 func (l *Lexer) tokenForNumber() {
-	text := string(l.input[l.from:l.next])
-	token := Token{
-		Text: text,
-		Type: TokenTypeNumber,
-	}
-	l.produceToken(token)
+	l.addToken(l.from, l.next, TokenTypeNumber)
 }
 
 func (l *Lexer) tokenForString() {
 	from := l.from + 1 // skip opening quote
-	text := string(l.input[from:l.next])
-	token := Token{
-		Text: text,
-		Type: TokenTypeString,
-	}
-	l.produceToken(token)
+	to := l.next
+	l.addToken(from, to, TokenTypeString)
 }
 
 func (l *Lexer) tokenForWord() {
 	word := string(l.input[l.from:l.next])
-	token := Token{
-		Text: word,
+	tokenType := TokenTypeIdentifier
+	if t, ok := keywordMap[strings.ToLower(word)]; ok {
+		tokenType = t
 	}
-	if typ, ok := keywordMap[strings.ToLower(word)]; ok {
-		token.Type = typ
-	}
-	l.produceToken(token)
+	l.addToken(l.from, l.next, tokenType)
 }
 
 func (l *Lexer) tokenForPunctuation() {
 	text := string(l.input[l.from:l.next])
-	typ, ok := punctuationMap[text]
+	tokenType, ok := punctuationMap[text]
 	if !ok {
 		l.errorf("syntax error at %q", text)
+		return
 	}
-	token := Token{
-		Text: text,
-		Type: typ,
-	}
-	l.produceToken(token)
+	l.addToken(l.from, l.next, tokenType)
 }
 
 func (l *Lexer) nextRune() (r rune, ok bool) {
