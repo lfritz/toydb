@@ -1,6 +1,9 @@
 package sql
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type TokenType int
 
@@ -118,5 +121,13 @@ func (t Token) String() string {
 	if t.Type >= TokenTypeComma {
 		return t.Type.String()
 	}
-	return fmt.Sprintf("{%s %q}", t.Type, t.Text)
+	return fmt.Sprintf("(%s %q)", t.Type, t.Text)
+}
+
+func PrintTokens(tokens []Token) string {
+	values := make([]string, len(tokens))
+	for i, t := range tokens {
+		values[i] = t.String()
+	}
+	return strings.Join(values, " ")
 }

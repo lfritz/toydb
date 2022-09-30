@@ -7,136 +7,50 @@ import (
 
 func TestLexerValid(t *testing.T) {
 	cases := []struct {
-		input string
-		want  []Token
+		input, want string
 	}{
 		{
 			"",
-			nil,
+			"",
 		},
 		{
 			"select foo, bar, baz from qux;",
-			[]Token{
-				Token{TokenTypeSelect, "select"},
-				Token{TokenTypeIdentifier, "foo"},
-				Token{TokenTypeComma, ","},
-				Token{TokenTypeIdentifier, "bar"},
-				Token{TokenTypeComma, ","},
-				Token{TokenTypeIdentifier, "baz"},
-				Token{TokenTypeFrom, "from"},
-				Token{TokenTypeIdentifier, "qux"},
-				Token{TokenTypeSemicolon, ";"},
-			},
+			`select (identifier "foo") comma (identifier "bar") comma (identifier "baz") from (identifier "qux") semicolon`,
 		},
 		{
 			"select\tfoo  ,bar\t,baz from \t \n qux;   ",
-			[]Token{
-				Token{TokenTypeSelect, "select"},
-				Token{TokenTypeIdentifier, "foo"},
-				Token{TokenTypeComma, ","},
-				Token{TokenTypeIdentifier, "bar"},
-				Token{TokenTypeComma, ","},
-				Token{TokenTypeIdentifier, "baz"},
-				Token{TokenTypeFrom, "from"},
-				Token{TokenTypeIdentifier, "qux"},
-				Token{TokenTypeSemicolon, ";"},
-			},
+			`select (identifier "foo") comma (identifier "bar") comma (identifier "baz") from (identifier "qux") semicolon`,
 		},
 		{
 			"SELECT _foo, bar123, a_b$c FROM qux",
-			[]Token{
-				Token{TokenTypeSelect, "SELECT"},
-				Token{TokenTypeIdentifier, "_foo"},
-				Token{TokenTypeComma, ","},
-				Token{TokenTypeIdentifier, "bar123"},
-				Token{TokenTypeComma, ","},
-				Token{TokenTypeIdentifier, "a_b$c"},
-				Token{TokenTypeFrom, "FROM"},
-				Token{TokenTypeIdentifier, "qux"},
-			},
+			`select (identifier "_foo") comma (identifier "bar123") comma (identifier "a_b$c") from (identifier "qux")`,
 		},
 		{
 			"select foo from bar where (x = 123.45 or y < 0) and z >= .4",
-			[]Token{
-				Token{TokenTypeSelect, "select"},
-				Token{TokenTypeIdentifier, "foo"},
-				Token{TokenTypeFrom, "from"},
-				Token{TokenTypeIdentifier, "bar"},
-				Token{TokenTypeWhere, "where"},
-				Token{TokenTypeOpenParen, "("},
-				Token{TokenTypeIdentifier, "x"},
-				Token{TokenTypeEq, "="},
-				Token{TokenTypeNumber, "123.45"},
-				Token{TokenTypeOr, "or"},
-				Token{TokenTypeIdentifier, "y"},
-				Token{TokenTypeLt, "<"},
-				Token{TokenTypeNumber, "0"},
-				Token{TokenTypeCloseParen, ")"},
-				Token{TokenTypeAnd, "and"},
-				Token{TokenTypeIdentifier, "z"},
-				Token{TokenTypeGe, ">="},
-				Token{TokenTypeNumber, ".4"},
-			},
+			`select (identifier "foo") from (identifier "bar") where openparen (identifier "x") eq (number "123.45") or (identifier "y") lt (number "0") closeparen and (identifier "z") ge (number ".4")`,
 		},
 		{
 			"select * from foo where x is not null",
-			[]Token{
-				Token{TokenTypeSelect, "select"},
-				Token{TokenTypeStar, "*"},
-				Token{TokenTypeFrom, "from"},
-				Token{TokenTypeIdentifier, "foo"},
-				Token{TokenTypeWhere, "where"},
-				Token{TokenTypeIdentifier, "x"},
-				Token{TokenTypeIs, "is"},
-				Token{TokenTypeNot, "not"},
-				Token{TokenTypeNull, "null"},
-			},
+			`select star from (identifier "foo") where (identifier "x") is not null`,
 		},
 		{
 			"select foo from bar where x != 'hello' or y <> 'ciao'",
-			[]Token{
-				Token{TokenTypeSelect, "select"},
-				Token{TokenTypeIdentifier, "foo"},
-				Token{TokenTypeFrom, "from"},
-				Token{TokenTypeIdentifier, "bar"},
-				Token{TokenTypeWhere, "where"},
-				Token{TokenTypeIdentifier, "x"},
-				Token{TokenTypeNe, "!="},
-				Token{TokenTypeString, "hello"},
-				Token{TokenTypeOr, "or"},
-				Token{TokenTypeIdentifier, "y"},
-				Token{TokenTypeNe, "<>"},
-				Token{TokenTypeString, "ciao"},
-			},
+			`select (identifier "foo") from (identifier "bar") where (identifier "x") ne (string "hello") or (identifier "y") ne (string "ciao")`,
 		},
 		{
 			"select foo.x, bar.y from foo left outer join bar",
-			[]Token{
-				Token{TokenTypeSelect, "select"},
-				Token{TokenTypeIdentifier, "foo"},
-				Token{TokenTypeDot, "."},
-				Token{TokenTypeIdentifier, "x"},
-				Token{TokenTypeComma, ","},
-				Token{TokenTypeIdentifier, "bar"},
-				Token{TokenTypeDot, "."},
-				Token{TokenTypeIdentifier, "y"},
-				Token{TokenTypeFrom, "from"},
-				Token{TokenTypeIdentifier, "foo"},
-				Token{TokenTypeLeft, "left"},
-				Token{TokenTypeOuter, "outer"},
-				Token{TokenTypeJoin, "join"},
-				Token{TokenTypeIdentifier, "bar"},
-			},
+			`select (identifier "foo") dot (identifier "x") comma (identifier "bar") dot (identifier "y") from (identifier "foo") left outer join (identifier "bar")`,
 		},
 	}
 	for _, c := range cases {
-		got, err := Tokenize(c.input)
+		tokens, err := Tokenize(c.input)
 		if err != nil {
 			t.Errorf("Tokenize(%q) returned error: %v", c.input, err)
 			continue
 		}
+		got := PrintTokens(tokens)
 		if !reflect.DeepEqual(got, c.want) {
-			t.Errorf("Tokenize(%q) returned\n%v, want\n%v", c.input, got, c.want)
+			t.Errorf("Tokenize(%q) returned\n%s, want\n%s", c.input, got, c.want)
 		}
 	}
 }
