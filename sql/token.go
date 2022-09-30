@@ -1,0 +1,122 @@
+package sql
+
+import "fmt"
+
+type TokenType int
+
+const (
+	TokenTypeIdentifier TokenType = iota
+
+	// literals
+	TokenTypeString
+	TokenTypeNumber
+
+	// punctuation
+	TokenTypeComma
+	TokenTypeDot
+	TokenTypeStar
+	TokenTypeSemicolon
+	TokenTypeOpenParen
+	TokenTypeCloseParen
+	TokenTypeEq
+	TokenTypeNe
+	TokenTypeLt
+	TokenTypeGt
+	TokenTypeLe
+	TokenTypeGe
+
+	// keywords
+	TokenTypeSelect
+	TokenTypeFrom
+	TokenTypeWhere
+	TokenTypeAnd
+	TokenTypeOr
+	TokenTypeNot
+	TokenTypeIs
+	TokenTypeNull
+	TokenTypeLeft
+	TokenTypeRight
+	TokenTypeOuter
+	TokenTypeJoin
+)
+
+var tokenTypeNames = map[TokenType]string{
+	TokenTypeIdentifier: "identifier",
+	TokenTypeString:     "string",
+	TokenTypeNumber:     "number",
+	TokenTypeComma:      "comma",
+	TokenTypeDot:        "dot",
+	TokenTypeStar:       "star",
+	TokenTypeSemicolon:  "semicolon",
+	TokenTypeOpenParen:  "openparen",
+	TokenTypeCloseParen: "closeparen",
+	TokenTypeEq:         "eq",
+	TokenTypeNe:         "ne",
+	TokenTypeLt:         "lt",
+	TokenTypeGt:         "gt",
+	TokenTypeLe:         "le",
+	TokenTypeGe:         "ge",
+	TokenTypeSelect:     "select",
+	TokenTypeFrom:       "from",
+	TokenTypeWhere:      "where",
+	TokenTypeAnd:        "and",
+	TokenTypeOr:         "or",
+	TokenTypeNot:        "not",
+	TokenTypeIs:         "is",
+	TokenTypeNull:       "null",
+	TokenTypeLeft:       "left",
+	TokenTypeRight:      "right",
+	TokenTypeOuter:      "outer",
+	TokenTypeJoin:       "join",
+}
+
+func (t TokenType) String() string {
+	if name, ok := tokenTypeNames[t]; ok {
+		return name
+	}
+	return fmt.Sprintf("unexpected token type: %d", t)
+}
+
+var keywordMap = map[string]TokenType{
+	"select": TokenTypeSelect,
+	"from":   TokenTypeFrom,
+	"where":  TokenTypeWhere,
+	"and":    TokenTypeAnd,
+	"or":     TokenTypeOr,
+	"not":    TokenTypeNot,
+	"is":     TokenTypeIs,
+	"null":   TokenTypeNull,
+	"left":   TokenTypeLeft,
+	"right":  TokenTypeRight,
+	"outer":  TokenTypeOuter,
+	"join":   TokenTypeJoin,
+}
+
+var punctuationMap = map[string]TokenType{
+	",":  TokenTypeComma,
+	".":  TokenTypeDot,
+	"*":  TokenTypeStar,
+	";":  TokenTypeSemicolon,
+	"(":  TokenTypeOpenParen,
+	")":  TokenTypeCloseParen,
+	"=":  TokenTypeEq,
+	"!=": TokenTypeNe,
+	"<>": TokenTypeNe,
+	"<":  TokenTypeLt,
+	">":  TokenTypeGt,
+	"<=": TokenTypeLe,
+	">=": TokenTypeGe,
+}
+
+type Token struct {
+	// TODO include line & column number in Token
+	Type TokenType
+	Text string
+}
+
+func (t Token) String() string {
+	if t.Type >= TokenTypeComma {
+		return t.Type.String()
+	}
+	return fmt.Sprintf("{%s %q}", t.Type, t.Text)
+}
