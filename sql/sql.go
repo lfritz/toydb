@@ -3,14 +3,20 @@ package sql
 type Statement interface{}
 
 type SelectStatement struct {
-	What  []Expression
+	What  SelectList
 	From  []FromExpression
 	Where *Condition
 }
 
-type Expression interface{}
+type SelectList interface{}
 
 type Star struct{}
+
+type ExpressionList struct {
+	Expressions []Expression
+}
+
+type Expression interface{}
 
 type Column struct {
 	Name string

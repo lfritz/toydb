@@ -25,7 +25,7 @@ func TestParserValid(t *testing.T) {
 		{
 			"select * from foo",
 			&SelectStatement{
-				What: []Expression{new(Star)},
+				What: new(Star),
 				From: []FromExpression{
 					TableName("foo"),
 				},

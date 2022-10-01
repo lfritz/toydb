@@ -14,7 +14,7 @@ func ParseTokens(tokens *TokenList) (Statement, error) {
 		return nil, err
 	}
 
-	what, tokens, err := parseExpressions(tokens)
+	what, tokens, err := parseSelectList(tokens)
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +34,17 @@ func ParseTokens(tokens *TokenList) (Statement, error) {
 		From: from,
 	}
 	return stmt, nil
+}
+
+func parseSelectList(tokens *TokenList) (SelectList, *TokenList, error) {
+	// see if the select list is "*"
+	_, err := tokens.Get(TokenTypeStar)
+	if err == nil {
+		return new(Star), tokens, nil
+	}
+
+	// if not, it must be a comma-separated list of expressions
+	return parseExpressions(tokens)
 }
 
 func parseExpressions(tokens *TokenList) ([]Expression, *TokenList, error) {
