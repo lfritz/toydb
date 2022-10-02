@@ -1,6 +1,34 @@
 package sql
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
+
+// A SelectList is the part of an SQL query between the "select" and "from" keywords.
+type SelectList interface {
+	String() string
+}
+
+// Star represents the star in "select * from ...".
+type Star struct{}
+
+func (s Star) String() string {
+	return "Star"
+}
+
+// ExpressionList represents the comma-separated list of expressions in an SQL query.
+type ExpressionList struct {
+	Expressions []Expression
+}
+
+func (l ExpressionList) String() string {
+	list := make([]string, len(l.Expressions))
+	for i, e := range l.Expressions {
+		list[i] = e.String()
+	}
+	return fmt.Sprintf("ExpressionList(%s)", strings.Join(list, ", "))
+}
 
 // An Expression is an SQL expression, for example the expression in a "where" clause.
 type Expression interface {

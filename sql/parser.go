@@ -2,6 +2,45 @@ package sql
 
 type Parser[T any] func(tokens *TokenList) (T, *TokenList, error)
 
+func ParseSelectList(tokens *TokenList) (SelectList, *TokenList, error) {
+	err := tokens.Consume(TokenTypeStar)
+	if err == nil {
+		return Star{}, tokens, nil
+	}
+
+	expressions, tokens, err := ParseExpressionList(tokens)
+	if err != nil {
+		return nil, nil, err
+	}
+	return ExpressionList{Expressions: expressions}, tokens, nil
+}
+
+func ParseExpressionList(tokens *TokenList) ([]Expression, *TokenList, error) {
+	var result []Expression
+
+	first := true
+	for {
+		e, tokens, err := ParseExpression(tokens)
+		if err != nil {
+			if first {
+				// empty expression list is allowed
+				break
+			}
+			return nil, nil, err
+		}
+		first = false
+
+		result = append(result, e)
+
+		err = tokens.Consume(TokenTypeComma)
+		if err != nil {
+			break
+		}
+	}
+
+	return result, tokens, nil
+}
+
 func ParseExpression(tokens *TokenList) (Expression, *TokenList, error) {
 	left, tokens, err := ParseValue(tokens)
 	if err != nil {
