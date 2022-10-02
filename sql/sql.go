@@ -7,6 +7,19 @@ type Expression interface {
 	String() string
 }
 
+// A ColumnReference is the name of a column, optionally with the name of the relation.
+type ColumnReference struct {
+	Relation string
+	Name     string
+}
+
+func (r ColumnReference) String() string {
+	if r.Relation == "" {
+		return fmt.Sprintf("Column(%s)", r.Name)
+	}
+	return fmt.Sprintf("Column(%s.%s)", r.Relation, r.Name)
+}
+
 // A String is an SQL string literal.
 type String struct {
 	Value string

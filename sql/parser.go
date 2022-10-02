@@ -37,22 +37,59 @@ var tokenToOperator = map[TokenType]BinaryOperator{
 }
 
 func ParseValue(tokens *TokenList) (Expression, *TokenList, error) {
-	token, err := tokens.Get(TokenTypeString, TokenTypeNumber)
+	token, err := tokens.Peek(TokenTypeString, TokenTypeNumber, TokenTypeIdentifier)
+	if err != nil {
+		return nil, nil, err
+	}
+	switch token.Type {
+	case TokenTypeString:
+		return ParseString(tokens)
+	case TokenTypeNumber:
+		return ParseNumber(tokens)
+	default:
+		return ParseColumnReference(tokens)
+	}
+}
+
+func ParseString(tokens *TokenList) (Expression, *TokenList, error) {
+	token, err := tokens.Get(TokenTypeString)
+	if err != nil {
+		return nil, nil, err
+	}
+	return String{token.Text}, tokens, nil
+}
+
+func ParseNumber(tokens *TokenList) (Expression, *TokenList, error) {
+	token, err := tokens.Get(TokenTypeNumber)
+	if err != nil {
+		return nil, nil, err
+	}
+	decimal, err := ParseDecimal(token.Text)
+	if err != nil {
+		return nil, nil, SyntaxError{token.From, err.Error()}
+	}
+	return Number{decimal}, tokens, nil
+}
+
+func ParseColumnReference(tokens *TokenList) (Expression, *TokenList, error) {
+	first, err := tokens.Get(TokenTypeIdentifier)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var exp Expression
-	switch token.Type {
-	case TokenTypeString:
-		exp = String{token.Text}
-	case TokenTypeNumber:
-		decimal, err := ParseDecimal(token.Text)
-		if err != nil {
-			return nil, nil, SyntaxError{token.From, err.Error()}
-		}
-		exp = Number{decimal}
+	err = tokens.Consume(TokenTypeDot)
+	if err != nil {
+		return ColumnReference{Name: first.Text}, tokens, nil
 	}
 
-	return exp, tokens, nil
+	second, err := tokens.Get(TokenTypeIdentifier)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	result := ColumnReference{
+		Relation: first.Text,
+		Name:     second.Text,
+	}
+	return result, tokens, nil
 }

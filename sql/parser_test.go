@@ -31,6 +31,8 @@ func TestParseValue(t *testing.T) {
 	}{
 		{"'hello'", String{Value: "hello"}},
 		{"12.34", Number{Value: Decimal{Value: 1234, Digits: 2}}},
+		{"foo", ColumnReference{Name: "foo"}},
+		{"foo.bar", ColumnReference{Relation: "foo", Name: "bar"}},
 	}
 	for _, c := range cases {
 		checkParser(t, "ParseValue", ParseValue, c.input, c.want)
