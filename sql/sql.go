@@ -15,3 +15,12 @@ type String struct {
 func (s String) PrintExpression() string {
 	return fmt.Sprintf("String(%q)", s.Value)
 }
+
+// A Number is a decimal number value.
+type Number struct {
+	Value Decimal
+}
+
+func (n Number) PrintExpression() string {
+	return fmt.Sprintf("Number(%v)", n.Value)
+}
