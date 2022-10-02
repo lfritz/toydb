@@ -10,6 +10,10 @@ type TokenList struct {
 	tokens []Token
 }
 
+func (l *TokenList) Len() int {
+	return len(l.tokens)
+}
+
 func (l *TokenList) Peek(expected ...TokenType) (Token, error) {
 	if err := l.checkEnd(); err != nil {
 		return Token{}, err

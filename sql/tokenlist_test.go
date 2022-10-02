@@ -2,12 +2,12 @@ package sql
 
 import "testing"
 
-var noTokens = TokenList{
+var noTokens = &TokenList{
 	input:  "",
 	tokens: []Token{},
 }
 
-var someTokens = TokenList{
+var someTokens = &TokenList{
 	input: "select * from foo",
 	tokens: []Token{
 		Token{Type: TokenTypeSelect, Text: "select"},
@@ -15,6 +15,22 @@ var someTokens = TokenList{
 		Token{Type: TokenTypeFrom, Text: "from"},
 		Token{Type: TokenTypeIdentifier, Text: "foo"},
 	},
+}
+
+func TestTokenListLen(t *testing.T) {
+	cases := []struct {
+		tokens *TokenList
+		want   int
+	}{
+		{noTokens, 0},
+		{someTokens, 4},
+	}
+	for _, c := range cases {
+		got := c.tokens.Len()
+		if got != c.want {
+			t.Errorf("Len returned %d, want %d", got, c.want)
+		}
+	}
 }
 
 func TestTokenListPeek(t *testing.T) {

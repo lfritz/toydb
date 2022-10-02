@@ -1,31 +1,17 @@
 package sql
 
-type Statement interface{}
+import "fmt"
 
-type SelectStatement struct {
-	What  SelectList
-	From  []FromExpression
-	Where *Condition
+// An Expression is an SQL expression, for example the expression in a "where" clause.
+type Expression interface {
+	PrintExpression() string
 }
 
-type SelectList interface{}
-
-type Star struct{}
-
-type ExpressionList struct {
-	Expressions []Expression
+// A String is an SQL string literal.
+type String struct {
+	Value string
 }
 
-type Expression interface{}
-
-type Column struct {
-	Name string
+func (s String) PrintExpression() string {
+	return fmt.Sprintf("String(%q)", s.Value)
 }
-
-type FromExpression interface{}
-
-type TableName string
-
-// TODO add type for joins
-
-type Condition interface{}
