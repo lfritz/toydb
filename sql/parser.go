@@ -2,6 +2,66 @@ package sql
 
 type Parser[T any] func(tokens *TokenList) (T, *TokenList, error)
 
+func ParseTableReference(tokens *TokenList) (TableReference, *TokenList, error) {
+	left, tokens, err := ParseTableName(tokens)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	token, err := tokens.Get(TokenTypeLeft, TokenTypeRight, TokenTypeJoin)
+	if err != nil {
+		// this is not a join, it's just a single table name
+		return left, tokens, nil
+	}
+
+	join := &Join{
+		Left: left,
+	}
+
+	switch token.Type {
+	case TokenTypeLeft:
+		join.Type = JoinTypeLeftOuter
+	case TokenTypeRight:
+		join.Type = JoinTypeRightOuter
+	}
+
+	switch token.Type {
+	case TokenTypeLeft, TokenTypeRight:
+		_ = tokens.Consume(TokenTypeOuter)
+		err := tokens.Consume(TokenTypeJoin)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	right, tokens, err := ParseTableName(tokens)
+	if err != nil {
+		return nil, nil, err
+	}
+	join.Right = right
+
+	err = tokens.Consume(TokenTypeOn)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	expression, tokens, err := ParseExpression(tokens)
+	if err != nil {
+		return nil, nil, err
+	}
+	join.Condition = expression
+
+	return join, tokens, nil
+}
+
+func ParseTableName(tokens *TokenList) (TableName, *TokenList, error) {
+	token, err := tokens.Get(TokenTypeIdentifier)
+	if err != nil {
+		return TableName{}, nil, err
+	}
+	return TableName{token.Text}, tokens, nil
+}
+
 func ParseSelectList(tokens *TokenList) (SelectList, *TokenList, error) {
 	err := tokens.Consume(TokenTypeStar)
 	if err == nil {

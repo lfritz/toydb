@@ -37,6 +37,52 @@ func checkParserInvalid[T any](t *testing.T, name string, parse Parser[T], input
 	}
 }
 
+func TestParseTableReference(t *testing.T) {
+	condition := &BinaryOperation{
+		Left:     ColumnReference{Relation: "foo", Name: "x"},
+		Operator: BinaryOperatorEq,
+		Right:    ColumnReference{Relation: "bar", Name: "x"},
+	}
+	cases := []struct {
+		input string
+		want  TableReference
+	}{
+		{"foo", TableName{"foo"}},
+		{
+			"foo join bar on foo.x = bar.x",
+			&Join{
+				Type:      JoinTypeDefault,
+				Left:      TableName{"foo"},
+				Right:     TableName{"bar"},
+				Condition: condition,
+			},
+		},
+		{
+			"foo left outer join bar on foo.x = bar.x",
+			&Join{
+				Type:      JoinTypeLeftOuter,
+				Left:      TableName{"foo"},
+				Right:     TableName{"bar"},
+				Condition: condition,
+			},
+		},
+	}
+	for _, c := range cases {
+		checkParser(t, "ParseTableReference", ParseTableReference, c.input, c.want)
+	}
+
+	invalid := []string{
+		"",
+		"123",
+		"foo join bar",
+		"foo join bar on",
+		"foo join on foo.x = bar.x",
+	}
+	for _, input := range invalid {
+		checkParserInvalid(t, "ParseTableReference", ParseTableReference, input)
+	}
+}
+
 func TestParseSelectList(t *testing.T) {
 	cases := []struct {
 		input string

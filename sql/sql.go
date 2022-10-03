@@ -5,6 +5,56 @@ import (
 	"strings"
 )
 
+// A table reference defines a single table or multiple joined tables.
+type TableReference interface {
+	String() string
+}
+
+// A TableName is a TableReference that specifies a single table.
+type TableName struct {
+	Name string
+}
+
+func (t TableName) String() string {
+	return fmt.Sprintf("Table(%s)", t.Name)
+}
+
+// A TableName is a TableReference that specifies a join.
+type Join struct {
+	Type      JoinType
+	Left      TableReference
+	Right     TableReference
+	Condition Expression
+}
+
+func (j *Join) String() string {
+	return fmt.Sprintf("Join(%s, %s, %s, %s)",
+		j.Type.String(),
+		j.Left.String(),
+		j.Right.String(),
+		j.Condition.String())
+}
+
+type JoinType int
+
+const (
+	JoinTypeDefault JoinType = iota
+	JoinTypeLeftOuter
+	JoinTypeRightOuter
+)
+
+func (t JoinType) String() string {
+	switch t {
+	case JoinTypeDefault:
+		return "default"
+	case JoinTypeLeftOuter:
+		return "left outer"
+	case JoinTypeRightOuter:
+		return "right outer"
+	}
+	return fmt.Sprintf("<unexpected join: %d>", t)
+}
+
 // A SelectList is the part of an SQL query between the "select" and "from" keywords.
 type SelectList interface {
 	String() string
