@@ -230,6 +230,7 @@ func TestParseValue(t *testing.T) {
 	}{
 		{"'hello'", String{Value: "hello"}},
 		{"12.34", Number{Value: types.NewDecimal("12.34")}},
+		{"true", Boolean{Value: true}},
 		{"foo", ColumnReference{Name: "foo"}},
 		{"foo.bar", ColumnReference{Relation: "foo", Name: "bar"}},
 	}

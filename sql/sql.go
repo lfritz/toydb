@@ -133,7 +133,16 @@ func (s String) String() string {
 	return fmt.Sprintf("String(%q)", s.Value)
 }
 
-// A Number is a decimal number value.
+// A Boolean is as SQL boolean literal.
+type Boolean struct {
+	Value bool
+}
+
+func (b Boolean) String() string {
+	return fmt.Sprintf("Boolean(%v)", b.Value)
+}
+
+// A Number is an SQL number literal.
 type Number struct {
 	Value types.Decimal
 }

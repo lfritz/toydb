@@ -196,7 +196,9 @@ var tokenToOperator = map[TokenType]BinaryOperator{
 }
 
 func ParseValue(tokens *TokenList) (Expression, *TokenList, error) {
-	token, err := tokens.Peek(TokenTypeString, TokenTypeNumber, TokenTypeIdentifier)
+	token, err := tokens.Peek(
+		TokenTypeString, TokenTypeNumber, TokenTypeIdentifier, TokenTypeFalse, TokenTypeTrue,
+	)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -205,6 +207,9 @@ func ParseValue(tokens *TokenList) (Expression, *TokenList, error) {
 		return ParseString(tokens)
 	case TokenTypeNumber:
 		return ParseNumber(tokens)
+	case TokenTypeFalse, TokenTypeTrue:
+		tokens.Consume()
+		return Boolean{token.Type == TokenTypeTrue}, tokens, nil
 	default:
 		return ParseColumnReference(tokens)
 	}
