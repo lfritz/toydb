@@ -5,6 +5,29 @@ import (
 	"strings"
 )
 
+// A Statement is an SQL statement, e.g. a select query or an insert statement.
+type Statement interface {
+	String() string
+}
+
+// A SelectStatement is a "select ... from ..." query.
+type SelectStatement struct {
+	What  SelectList
+	From  TableReference
+	Where Expression
+}
+
+func (q SelectStatement) String() string {
+	where := ""
+	if q.Where != nil {
+		where = fmt.Sprintf(", Where: %s", q.Where.String())
+	}
+	return fmt.Sprintf("SelectStatement(What: %s, From: %s%s)",
+		q.What.String(),
+		q.From.String(),
+		where)
+}
+
 // A table reference defines a single table or multiple joined tables.
 type TableReference interface {
 	String() string

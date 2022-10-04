@@ -37,12 +37,66 @@ func checkParserInvalid[T any](t *testing.T, name string, parse Parser[T], input
 	}
 }
 
-func TestParseTableReference(t *testing.T) {
-	condition := &BinaryOperation{
-		Left:     ColumnReference{Relation: "foo", Name: "x"},
-		Operator: BinaryOperatorEq,
-		Right:    ColumnReference{Relation: "bar", Name: "x"},
+var condition1 = &BinaryOperation{
+	Left:     ColumnReference{Relation: "foo", Name: "x"},
+	Operator: BinaryOperatorEq,
+	Right:    ColumnReference{Relation: "bar", Name: "x"},
+}
+
+func TestParseSelectStatement(t *testing.T) {
+	cases := []struct {
+		input string
+		want  *SelectStatement
+	}{
+		{
+			"select x, y from foo",
+			&SelectStatement{
+				What: ExpressionList{
+					[]Expression{ColumnReference{Name: "x"}, ColumnReference{Name: "y"}},
+				},
+				From: TableName{Name: "foo"},
+			},
+		},
+		{
+			"select * from foo join bar on foo.x = bar.x",
+			&SelectStatement{
+				What: Star{},
+				From: &Join{
+					Type:      JoinTypeDefault,
+					Left:      TableName{"foo"},
+					Right:     TableName{"bar"},
+					Condition: condition1,
+				},
+			},
+		},
+		{
+			"select * from foo where foo.x = 0",
+			&SelectStatement{
+				What: Star{},
+				From: TableName{Name: "foo"},
+				Where: &BinaryOperation{
+					Left:     ColumnReference{Relation: "foo", Name: "x"},
+					Operator: BinaryOperatorEq,
+					Right:    Number{Value: Decimal{}},
+				},
+			},
+		},
 	}
+	for _, c := range cases {
+		checkParser(t, "ParseSelectStatement", ParseSelectStatement, c.input, c.want)
+	}
+
+	invalid := []string{
+		"",
+		"select x, * from foo",
+		"select x, y from",
+	}
+	for _, input := range invalid {
+		checkParserInvalid(t, "ParseSelectStatement", ParseSelectStatement, input)
+	}
+}
+
+func TestParseTableReference(t *testing.T) {
 	cases := []struct {
 		input string
 		want  TableReference
@@ -54,7 +108,7 @@ func TestParseTableReference(t *testing.T) {
 				Type:      JoinTypeDefault,
 				Left:      TableName{"foo"},
 				Right:     TableName{"bar"},
-				Condition: condition,
+				Condition: condition1,
 			},
 		},
 		{
@@ -63,7 +117,7 @@ func TestParseTableReference(t *testing.T) {
 				Type:      JoinTypeLeftOuter,
 				Left:      TableName{"foo"},
 				Right:     TableName{"bar"},
-				Condition: condition,
+				Condition: condition1,
 			},
 		},
 	}

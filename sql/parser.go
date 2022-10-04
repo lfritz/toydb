@@ -2,6 +2,39 @@ package sql
 
 type Parser[T any] func(tokens *TokenList) (T, *TokenList, error)
 
+func ParseSelectStatement(tokens *TokenList) (*SelectStatement, *TokenList, error) {
+	err := tokens.Consume(TokenTypeSelect)
+	if err != nil {
+		return nil, nil, err
+	}
+	result := new(SelectStatement)
+
+	result.What, tokens, err = ParseSelectList(tokens)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = tokens.Consume(TokenTypeFrom)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	result.From, tokens, err = ParseTableReference(tokens)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = tokens.Consume(TokenTypeWhere)
+	if err == nil {
+		result.Where, tokens, err = ParseExpression(tokens)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return result, tokens, nil
+}
+
 func ParseTableReference(tokens *TokenList) (TableReference, *TokenList, error) {
 	left, tokens, err := ParseTableName(tokens)
 	if err != nil {
