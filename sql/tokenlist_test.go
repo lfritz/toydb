@@ -79,7 +79,19 @@ func TestTokenListConsume(t *testing.T) {
 	l := someTokens
 	err := l.Consume()
 	if err != nil {
-		t.Fatalf("Consume() returned error: %v", err)
+		t.Errorf("Consume() returned error: %v", err)
+	}
+}
+
+func TestTokenListExpectEnd(t *testing.T) {
+	err := noTokens.ExpectEnd()
+	if err != nil {
+		t.Error("ExpectEnd() returned error for empty list")
+	}
+
+	err = someTokens.ExpectEnd()
+	if err == nil {
+		t.Error("ExpectEnd() did not return error for nonempty list")
 	}
 }
 

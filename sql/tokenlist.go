@@ -5,15 +5,21 @@ import (
 	"strings"
 )
 
+// TokenList is the input to the parser: a list of tokens, with the original input text.
 type TokenList struct {
 	input  string
 	tokens []Token
 }
 
+// Len returns the number of tokens.
 func (l *TokenList) Len() int {
 	return len(l.tokens)
 }
 
+// Peek returns the next token without modifying the list.
+//
+// If there are no tokens left of the next token doesn't have one of the expected types, it returns
+// an error. If no expected types are given, then any type is accepted.
 func (l *TokenList) Peek(expected ...TokenType) (Token, error) {
 	if err := l.checkEnd(); err != nil {
 		return Token{}, err
@@ -26,6 +32,8 @@ func (l *TokenList) Peek(expected ...TokenType) (Token, error) {
 	return first, nil
 }
 
+// Get removes the next token from the list and returns it. The arguments are used in the same way
+// as for Peek.
 func (l *TokenList) Get(expected ...TokenType) (Token, error) {
 	if err := l.checkEnd(); err != nil {
 		return Token{}, err
@@ -39,6 +47,7 @@ func (l *TokenList) Get(expected ...TokenType) (Token, error) {
 	return first, nil
 }
 
+// Consume removes the next token from the list. The arguments are used in the same way as for Peek.
 func (l *TokenList) Consume(expected ...TokenType) error {
 	if err := l.checkEnd(); err != nil {
 		return err
@@ -48,6 +57,18 @@ func (l *TokenList) Consume(expected ...TokenType) error {
 		return err
 	}
 	l.tokens = l.tokens[1:]
+	return nil
+}
+
+// End returns an error if the list is not empty.
+func (l *TokenList) ExpectEnd() error {
+	if len(l.tokens) > 0 {
+		token := l.tokens[0]
+		return SyntaxError{
+			Position: len([]rune(l.input)),
+			Msg:      fmt.Sprintf("got %s, expected end of statement", token.Text),
+		}
+	}
 	return nil
 }
 

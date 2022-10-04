@@ -1,6 +1,31 @@
 package sql
 
+// Parse parses an SQL statement with optional semicolon at the end.
+func Parse(input string) (Statement, error) {
+	ts, err := Tokenize(input)
+	if err != nil {
+		return nil, err
+	}
+	tokens := &TokenList{input, ts}
+
+	statement, tokens, err := ParseStatement(tokens)
+	if err != nil {
+		return nil, err
+	}
+	_ = tokens.Consume(TokenTypeSemicolon)
+
+	if err = tokens.ExpectEnd(); err != nil {
+		return nil, err
+	}
+
+	return statement, nil
+}
+
 type Parser[T any] func(tokens *TokenList) (T, *TokenList, error)
+
+func ParseStatement(tokens *TokenList) (Statement, *TokenList, error) {
+	return ParseSelectStatement(tokens)
+}
 
 func ParseSelectStatement(tokens *TokenList) (*SelectStatement, *TokenList, error) {
 	err := tokens.Consume(TokenTypeSelect)

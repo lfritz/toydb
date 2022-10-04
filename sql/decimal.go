@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// Decimal is a quick-and-dirty implementation of a decimal numberic type.
+// Decimal is a quick-and-dirty implementation of a decimal numeric type.
 type Decimal struct {
 	Value, Digits int
 }

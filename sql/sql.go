@@ -153,6 +153,7 @@ func (o *BinaryOperation) String() string {
 		o.Right.String())
 }
 
+// A BinaryOperation is an operator with two operands.
 type BinaryOperator int
 
 const (

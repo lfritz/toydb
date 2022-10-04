@@ -5,6 +5,19 @@ import (
 	"testing"
 )
 
+func TestParse(t *testing.T) {
+	_, err := Parse("select foo from bar;")
+	if err != nil {
+		t.Errorf("Parse returned error for valid statement: %v", err)
+	}
+
+	_, err = Parse("select foo from bar; hello")
+	if err == nil {
+		t.Error("Parse did not return error for statement with extra text at the end")
+	}
+
+}
+
 func checkParser[T any](t *testing.T, name string, parse Parser[T], input string, want T) {
 	ts, err := Tokenize(input)
 	if err != nil {
