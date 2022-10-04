@@ -62,7 +62,7 @@ func TestParseSelectStatement(t *testing.T) {
 			&SelectStatement{
 				What: Star{},
 				From: &Join{
-					Type:      JoinTypeDefault,
+					Type:      JoinTypeInner,
 					Left:      TableName{"foo"},
 					Right:     TableName{"bar"},
 					Condition: condition1,
@@ -105,7 +105,7 @@ func TestParseTableReference(t *testing.T) {
 		{
 			"foo join bar on foo.x = bar.x",
 			&Join{
-				Type:      JoinTypeDefault,
+				Type:      JoinTypeInner,
 				Left:      TableName{"foo"},
 				Right:     TableName{"bar"},
 				Condition: condition1,

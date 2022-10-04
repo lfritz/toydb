@@ -61,15 +61,15 @@ func (j *Join) String() string {
 type JoinType int
 
 const (
-	JoinTypeDefault JoinType = iota
+	JoinTypeInner JoinType = iota
 	JoinTypeLeftOuter
 	JoinTypeRightOuter
 )
 
 func (t JoinType) String() string {
 	switch t {
-	case JoinTypeDefault:
-		return "default"
+	case JoinTypeInner:
+		return "inner"
 	case JoinTypeLeftOuter:
 		return "left outer"
 	case JoinTypeRightOuter:
