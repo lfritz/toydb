@@ -1,5 +1,7 @@
 package sql
 
+import "github.com/lfritz/toydb/types"
+
 // Parse parses an SQL statement with optional semicolon at the end.
 func Parse(input string) (Statement, error) {
 	ts, err := Tokenize(input)
@@ -221,7 +223,7 @@ func ParseNumber(tokens *TokenList) (Expression, *TokenList, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	decimal, err := ParseDecimal(token.Text)
+	decimal, err := types.ParseDecimal(token.Text)
 	if err != nil {
 		return nil, nil, SyntaxError{token.From, err.Error()}
 	}

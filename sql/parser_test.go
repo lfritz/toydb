@@ -3,6 +3,8 @@ package sql
 import (
 	"reflect"
 	"testing"
+
+	"github.com/lfritz/toydb/types"
 )
 
 func TestParse(t *testing.T) {
@@ -19,6 +21,8 @@ func TestParse(t *testing.T) {
 }
 
 func checkParser[T any](t *testing.T, name string, parse Parser[T], input string, want T) {
+	t.Helper()
+
 	ts, err := Tokenize(input)
 	if err != nil {
 		t.Fatalf("Tokenize(%q) returned error: %v", input, err)
@@ -38,6 +42,8 @@ func checkParser[T any](t *testing.T, name string, parse Parser[T], input string
 }
 
 func checkParserInvalid[T any](t *testing.T, name string, parse Parser[T], input string) {
+	t.Helper()
+
 	ts, err := Tokenize(input)
 	if err != nil {
 		t.Fatalf("Tokenize(%q) returned error: %v", input, err)
@@ -90,7 +96,7 @@ func TestParseSelectStatement(t *testing.T) {
 				Where: &BinaryOperation{
 					Left:     ColumnReference{Relation: "foo", Name: "x"},
 					Operator: BinaryOperatorEq,
-					Right:    Number{Value: Decimal{}},
+					Right:    Number{Value: types.DecimalZero()},
 				},
 			},
 		},
@@ -197,9 +203,9 @@ func TestParseExpression(t *testing.T) {
 		{
 			"12.3 < 45.6",
 			&BinaryOperation{
-				Left:     Number{Decimal{Value: 123, Digits: 1}},
+				Left:     Number{types.NewDecimal("12.3")},
 				Operator: BinaryOperatorLt,
-				Right:    Number{Decimal{Value: 456, Digits: 1}},
+				Right:    Number{types.NewDecimal("45.6")},
 			},
 		},
 	}
@@ -223,7 +229,7 @@ func TestParseValue(t *testing.T) {
 		want  Expression
 	}{
 		{"'hello'", String{Value: "hello"}},
-		{"12.34", Number{Value: Decimal{Value: 1234, Digits: 2}}},
+		{"12.34", Number{Value: types.NewDecimal("12.34")}},
 		{"foo", ColumnReference{Name: "foo"}},
 		{"foo.bar", ColumnReference{Relation: "foo", Name: "bar"}},
 	}

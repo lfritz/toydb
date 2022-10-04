@@ -3,6 +3,8 @@ package sql
 import (
 	"fmt"
 	"strings"
+
+	"github.com/lfritz/toydb/types"
 )
 
 // A Statement is an SQL statement, e.g. a select query or an insert statement.
@@ -132,7 +134,7 @@ func (s String) String() string {
 
 // A Number is a decimal number value.
 type Number struct {
-	Value Decimal
+	Value types.Decimal
 }
 
 func (n Number) String() string {
