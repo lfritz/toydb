@@ -6,8 +6,6 @@ import (
 	"unicode"
 )
 
-// TODO add "true" and "false" keywords
-
 func Tokenize(input string) ([]Token, error) {
 	return NewLexer(input).Run()
 }
