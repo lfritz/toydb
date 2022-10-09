@@ -2,7 +2,7 @@ package types
 
 import "testing"
 
-func TestNewDateValid(t *testing.T) {
+func TestCheckDateValid(t *testing.T) {
 	cases := []struct {
 		year, month, day int
 		want             Date
@@ -13,17 +13,17 @@ func TestNewDateValid(t *testing.T) {
 		{9999, 12, 31, Date{9999, 12, 31}},
 	}
 	for _, c := range cases {
-		got, ok := NewDate(c.year, c.month, c.day)
+		got, ok := CheckDate(c.year, c.month, c.day)
 		if !ok {
-			t.Errorf("NewDate(%v, %v, %v) returned ok = false", c.year, c.month, c.day)
+			t.Errorf("CheckDate(%v, %v, %v) returned ok = false", c.year, c.month, c.day)
 		}
 		if got != c.want {
-			t.Errorf("NewDate(%v, %v, %v) returned %v, want %v", c.year, c.month, c.day, got, c.want)
+			t.Errorf("CheckDate(%v, %v, %v) returned %v, want %v", c.year, c.month, c.day, got, c.want)
 		}
 	}
 }
 
-func TestNewDateInvalid(t *testing.T) {
+func TestCheckDateInvalid(t *testing.T) {
 	cases := []struct {
 		year, month, day int
 	}{
@@ -34,9 +34,9 @@ func TestNewDateInvalid(t *testing.T) {
 		{1999, 2, 29},
 	}
 	for _, c := range cases {
-		_, ok := NewDate(c.year, c.month, c.day)
+		_, ok := CheckDate(c.year, c.month, c.day)
 		if ok {
-			t.Errorf("NewDate(%v, %v, %v) returned ok = true", c.year, c.month, c.day)
+			t.Errorf("CheckDate(%v, %v, %v) returned ok = true", c.year, c.month, c.day)
 		}
 	}
 }

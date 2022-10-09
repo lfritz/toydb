@@ -1,16 +1,31 @@
 package types
 
+import "fmt"
+
 // Date represents a Gregorian calendar date between year 1 and year 9999.
 type Date struct {
 	year, month, day int
 }
 
-// NewDate returns a new Date instance. If the date is invalid, ok will be false.
-func NewDate(year, month, day int) (date Date, ok bool) {
+// NewDate returns a new Date instance. It panics if the date is invalid.
+func NewDate(year, month, day int) Date {
+	result, ok := CheckDate(year, month, day)
+	if !ok {
+		panic(fmt.Sprintf("invalid date: %04d-%02d-%02d", year, month, day))
+	}
+	return result
+}
+
+// CheckDate returns a new Date instance. If the date is invalid, ok will be false.
+func CheckDate(year, month, day int) (date Date, ok bool) {
 	if year < 1 || year > 9999 || month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month) {
 		return Date{}, false
 	}
 	return Date{year, month, day}, true
+}
+
+func (d Date) Type() Type {
+	return TypeDate
 }
 
 func daysInMonth(year, month int) int {
@@ -31,8 +46,13 @@ func leapYear(year int) bool {
 	return year%4 == 0 && (year%100 != 0 || year%400 == 0)
 }
 
-// Compare compares d to e.
-func (d Date) Compare(e Date) Compared {
+// Compare compares d to v.
+func (d Date) Compare(v Value) Compared {
+	e, ok := v.(Date)
+	if !ok {
+		return ComparedInvalid
+	}
+
 	switch {
 	case d.year < e.year:
 		return ComparedLt

@@ -10,8 +10,16 @@ func NewBoolean(value bool) Boolean {
 	return Boolean{value}
 }
 
-// Compare compares b to c, with true > false.
-func (b Boolean) Compare(c Boolean) Compared {
+func (b Boolean) Type() Type {
+	return TypeBoolean
+}
+
+// Compare compares b to v, with true > false.
+func (b Boolean) Compare(v Value) Compared {
+	c, ok := v.(Boolean)
+	if !ok {
+		return ComparedInvalid
+	}
 	switch {
 	case b.value == c.value:
 		return ComparedEq

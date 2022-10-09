@@ -10,8 +10,16 @@ func NewText(value string) Text {
 	return Text{value}
 }
 
-// Compare compares t to u.
-func (t Text) Compare(u Text) Compared {
+func (t Text) Type() Type {
+	return TypeText
+}
+
+// Compare compares t to v.
+func (t Text) Compare(v Value) Compared {
+	u, ok := v.(Text)
+	if !ok {
+		return ComparedInvalid
+	}
 	switch {
 	case t.value < u.value:
 		return ComparedLt

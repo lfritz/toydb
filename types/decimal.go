@@ -61,8 +61,17 @@ func ParseDecimal(input string) (Decimal, error) {
 	return decimal, nil
 }
 
-// Compare compares d to e.
-func (d Decimal) Compare(e Decimal) Compared {
+func (d Decimal) Type() Type {
+	return TypeDecimal
+}
+
+// Compare compares d to v.
+func (d Decimal) Compare(v Value) Compared {
+	e, ok := v.(Decimal)
+	if !ok {
+		return ComparedInvalid
+	}
+
 	gt, lt := ComparedGt, ComparedLt
 	switch {
 	case d.negative && e.negative:
