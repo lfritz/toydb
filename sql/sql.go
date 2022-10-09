@@ -1,4 +1,3 @@
-// Package sql implements types to represent SQL statements as well as an SQL parser.
 package sql
 
 import (
