@@ -9,7 +9,7 @@ import (
 
 // A Query implements the steps to run a query on a database.
 type Query interface {
-	Schema() *types.TableSchema
+	Schema() types.TableSchema
 	Run(db *storage.Database) *types.Relation
 }
 
@@ -32,7 +32,7 @@ func NewSelect(from Query, condition Expression) (*Select, error) {
 	}, nil
 }
 
-func (s *Select) Schema() *types.TableSchema {
+func (s *Select) Schema() types.TableSchema {
 	return s.From.Schema()
 }
 
@@ -53,3 +53,9 @@ func (s *Select) Run(db *storage.Database) *types.Relation {
 		Rows:   rows,
 	}
 }
+
+// TODO Project type
+
+// TODO Load type
+
+// TODO Join type

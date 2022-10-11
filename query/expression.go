@@ -10,7 +10,7 @@ import (
 // Each expression has a static type.
 type Expression interface {
 	Type() types.Type
-	Check(schema *types.TableSchema) error
+	Check(schema types.TableSchema) error
 	Evaluate(r *types.Row) types.Value
 }
 
@@ -26,7 +26,7 @@ func (c Constant) Type() types.Type {
 	return c.value.Type()
 }
 
-func (c Constant) Check(schema *types.TableSchema) error {
+func (c Constant) Check(schema types.TableSchema) error {
 	return nil
 }
 
@@ -50,8 +50,16 @@ func (c *ColumnReference) Type() types.Type {
 	return c.T
 }
 
-func (c ColumnReference) Check(schema *types.TableSchema) error {
-	return nil // TODO
+func (c ColumnReference) Check(schema types.TableSchema) error {
+	if c.Index >= len(schema.Columns) {
+		return fmt.Errorf("index out of range: %d", c.Index)
+	}
+	got := schema.Columns[c.Index].Type
+	expected := c.T
+	if got != expected {
+		return fmt.Errorf("wrong type for column %d: got %v, expected %v", c.Index, got, expected)
+	}
+	return nil
 }
 
 func (c *ColumnReference) Evaluate(r *types.Row) types.Value {
@@ -79,8 +87,14 @@ func (o *BinaryOperation) Type() types.Type {
 	return types.TypeBoolean
 }
 
-func (o BinaryOperation) Check(schema *types.TableSchema) error {
-	return nil // TODO
+func (o BinaryOperation) Check(schema types.TableSchema) error {
+	if err := o.Left.Check(schema); err != nil {
+		return err
+	}
+	if err := o.Right.Check(schema); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (o *BinaryOperation) Evaluate(r *types.Row) types.Value {
