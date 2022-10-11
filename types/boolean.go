@@ -14,6 +14,10 @@ func (b Boolean) Type() Type {
 	return TypeBoolean
 }
 
+func (b Boolean) Bool() bool {
+	return b.value
+}
+
 // Compare compares b to v, with true > false.
 func (b Boolean) Compare(v Value) Compared {
 	c, ok := v.(Boolean)

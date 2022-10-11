@@ -7,9 +7,10 @@ import (
 )
 
 // An Expression is an expression composed of column references, constants, and operations on them.
-// Each expression has a static type; the types are checked when the expression is constructed.
+// Each expression has a static type.
 type Expression interface {
 	Type() types.Type
+	Check(schema *types.TableSchema) error
 	Evaluate(r *types.Row) types.Value
 }
 
@@ -23,6 +24,10 @@ func NewConstant(value types.Value) *Constant {
 
 func (c Constant) Type() types.Type {
 	return c.value.Type()
+}
+
+func (c Constant) Check(schema *types.TableSchema) error {
+	return nil
 }
 
 func (c Constant) Evaluate(r *types.Row) types.Value {
@@ -43,6 +48,10 @@ func NewColumnReference(index int, t types.Type) *ColumnReference {
 
 func (c *ColumnReference) Type() types.Type {
 	return c.T
+}
+
+func (c ColumnReference) Check(schema *types.TableSchema) error {
+	return nil // TODO
 }
 
 func (c *ColumnReference) Evaluate(r *types.Row) types.Value {
@@ -68,6 +77,10 @@ func NewBinaryOperation(left, right Expression, op BinaryOperator) (*BinaryOpera
 
 func (o *BinaryOperation) Type() types.Type {
 	return types.TypeBoolean
+}
+
+func (o BinaryOperation) Check(schema *types.TableSchema) error {
+	return nil // TODO
 }
 
 func (o *BinaryOperation) Evaluate(r *types.Row) types.Value {
