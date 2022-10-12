@@ -7,8 +7,8 @@ import (
 	"github.com/lfritz/toydb/types"
 )
 
-// A Query implements the steps to run a query on a database.
-type Query interface {
+// A Plan implements the steps to run a query on a database.
+type Plan interface {
 	Schema() types.TableSchema
 	Run(db *storage.Database) *types.Relation
 }
@@ -40,11 +40,11 @@ func (l *Load) Run(db *storage.Database) *types.Relation {
 
 // A Select step selects the rows matching an expression.
 type Select struct {
-	From      Query
+	From      Plan
 	Condition Expression
 }
 
-func NewSelect(from Query, condition Expression) (*Select, error) {
+func NewSelect(from Plan, condition Expression) (*Select, error) {
 	if condition.Type() != types.TypeBoolean {
 		return nil, fmt.Errorf("invalid condition for select step: %v", condition)
 	}
@@ -107,11 +107,11 @@ func (c OutputColumn) Schema() types.ColumnSchema {
 
 // A Project step produces a new set of columns.
 type Project struct {
-	From    Query
+	From    Plan
 	Columns []OutputColumn
 }
 
-func NewProject(from Query, columns []OutputColumn) (*Project, error) {
+func NewProject(from Plan, columns []OutputColumn) (*Project, error) {
 	// check for duplicate column names
 	names := make(map[string]bool)
 	for _, c := range columns {
