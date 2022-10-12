@@ -13,6 +13,31 @@ type Query interface {
 	Run(db *storage.Database) *types.Relation
 }
 
+// A Load step loads a table from the database.
+type Load struct {
+	TableName   string
+	TableSchema types.TableSchema
+}
+
+func NewLoad(name string, schema types.TableSchema) *Load {
+	return &Load{
+		TableName:   name,
+		TableSchema: schema,
+	}
+}
+
+func (l *Load) Schema() types.TableSchema {
+	return l.TableSchema
+}
+
+func (l *Load) Run(db *storage.Database) *types.Relation {
+	t, err := db.Table(l.TableName)
+	if err != nil {
+		panic(fmt.Sprintf("error loading table %s: %v", l.TableName, err))
+	}
+	return t
+}
+
 // A Select step selects the rows matching an expression.
 type Select struct {
 	From      Query
@@ -55,7 +80,5 @@ func (s *Select) Run(db *storage.Database) *types.Relation {
 }
 
 // TODO Project type
-
-// TODO Load type
 
 // TODO Join type

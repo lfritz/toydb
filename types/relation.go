@@ -13,6 +13,14 @@ func (r *Relation) Row(i int) *Row {
 	}
 }
 
+func (r *Relation) Insert(row []Value) error {
+	if err := r.Schema.Check(row); err != nil {
+		return err
+	}
+	r.Rows = append(r.Rows, row)
+	return nil
+}
+
 type Row struct {
 	Schema TableSchema
 	Values []Value
