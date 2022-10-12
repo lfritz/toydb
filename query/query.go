@@ -79,6 +79,86 @@ func (s *Select) Run(db *storage.Database) *types.Relation {
 	}
 }
 
-// TODO Project type
+type OutputColumn struct {
+	Name       string
+	Expression Expression
+}
+
+func SimpleColumn(name string, index int, t types.Type) OutputColumn {
+	return OutputColumn{
+		Name:       name,
+		Expression: NewColumnReference(index, t),
+	}
+}
+
+func ComputedColumn(name string, expression Expression) OutputColumn {
+	return OutputColumn{
+		Name:       name,
+		Expression: expression,
+	}
+}
+
+func (c OutputColumn) Schema() types.ColumnSchema {
+	return types.ColumnSchema{
+		Name: c.Name,
+		Type: c.Expression.Type(),
+	}
+}
+
+// A Project step produces a new set of columns.
+type Project struct {
+	From    Query
+	Columns []OutputColumn
+}
+
+func NewProject(from Query, columns []OutputColumn) (*Project, error) {
+	// check for duplicate column names
+	names := make(map[string]bool)
+	for _, c := range columns {
+		if names[c.Name] {
+			return nil, fmt.Errorf("duplicate column: %s", c.Name)
+		}
+		names[c.Name] = true
+	}
+
+	// check expressions
+	for _, c := range columns {
+		if err := c.Expression.Check(from.Schema()); err != nil {
+			return nil, err
+		}
+	}
+
+	project := &Project{
+		From:    from,
+		Columns: columns,
+	}
+	return project, nil
+}
+
+func (p *Project) Schema() types.TableSchema {
+	columns := make([]types.ColumnSchema, len(p.Columns))
+	for i, c := range p.Columns {
+		columns[i] = c.Schema()
+	}
+	return types.TableSchema{
+		Columns: columns,
+	}
+}
+
+func (p *Project) Run(db *storage.Database) *types.Relation {
+	from := p.From.Run(db)
+	rows := make([][]types.Value, len(from.Rows))
+	for i := range from.Rows {
+		row := make([]types.Value, len(p.Columns))
+		for j := range p.Columns {
+			row[j] = p.Columns[j].Expression.Evaluate(from.Row(i))
+		}
+		rows[i] = row
+	}
+	return &types.Relation{
+		Schema: p.Schema(),
+		Rows:   rows,
+	}
+}
 
 // TODO Join type

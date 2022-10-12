@@ -72,3 +72,42 @@ func TestSelect(t *testing.T) {
 		t.Errorf("Run returned %v, want %v", got, want)
 	}
 }
+
+func TestProject(t *testing.T) {
+	want := &types.Relation{
+		Schema: types.TableSchema{
+			Columns: []types.ColumnSchema{
+				types.ColumnSchema{"bar", types.TypeText},
+				types.ColumnSchema{"baz", types.TypeDecimal},
+				types.ColumnSchema{"qux", types.TypeBoolean},
+			},
+		},
+		Rows: [][]types.Value{
+			[]types.Value{types.NewText("hello"), types.NewDecimal("123"), types.NewBoolean(true)},
+			[]types.Value{types.NewText("ciao"), types.NewDecimal("123"), types.NewBoolean(false)},
+		},
+	}
+
+	l := NewLoad("mytable", sampleSchema())
+	comparison, err := NewBinaryOperation(
+		NewColumnReference(0, types.TypeBoolean),
+		NewConstant(types.NewBoolean(false)),
+		BinaryOperatorEq,
+	)
+	if err != nil {
+		t.Fatalf("NewBinaryOperation returned error: %v", err)
+	}
+	columns := []OutputColumn{
+		OutputColumn{"bar", NewColumnReference(1, types.TypeText)},
+		OutputColumn{"baz", NewConstant(types.NewDecimal("123"))},
+		OutputColumn{"qux", comparison},
+	}
+	p, err := NewProject(l, columns)
+	if err != nil {
+		t.Fatalf("NewProject returned error: %v", err)
+	}
+	got := p.Run(sampleDatabase(t))
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Run returned %v, want %v", got, want)
+	}
+}
