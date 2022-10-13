@@ -1,6 +1,7 @@
 package query
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/lfritz/toydb/storage"
@@ -22,7 +23,7 @@ type Load struct {
 func NewLoad(name string, schema types.TableSchema) *Load {
 	return &Load{
 		TableName:   name,
-		TableSchema: schema,
+		TableSchema: schema.Prefix(name),
 	}
 }
 
@@ -161,4 +162,83 @@ func (p *Project) Run(db *storage.Database) *types.Relation {
 	}
 }
 
-// TODO Join type
+type JoinType int
+
+const (
+	JoinTypeInner JoinType = iota
+	JoinTypeLeftOuter
+	JoinTypeRightOuter
+)
+
+type Join struct {
+	Type           JoinType
+	Left, Right    Plan
+	Condition      Expression
+	combinedSchema types.TableSchema
+}
+
+func NewJoin(t JoinType, left, right Plan, condition Expression) (*Join, error) {
+	if t != JoinTypeInner {
+		return nil, errors.New("only inner joins are supported for now")
+	}
+	if condition.Type() != types.TypeBoolean {
+		return nil, fmt.Errorf("invalid join condition: %v", condition)
+	}
+
+	combinedSchema := combineSchemas(left.Schema(), right.Schema())
+	if err := condition.Check(combinedSchema); err != nil {
+		return nil, err
+	}
+
+	result := &Join{
+		Type:           t,
+		Left:           left,
+		Right:          right,
+		Condition:      condition,
+		combinedSchema: combinedSchema,
+	}
+	return result, nil
+}
+
+func (j *Join) Schema() types.TableSchema {
+	return j.combinedSchema
+}
+
+func (j *Join) Run(db *storage.Database) *types.Relation {
+	left := j.Left.Run(db)
+	right := j.Right.Run(db)
+	schema := j.Schema()
+
+	var rows [][]types.Value
+	for _, l := range left.Rows {
+		for _, r := range right.Rows {
+			row := &types.Row{
+				Schema: schema,
+				Values: combineRow(l, r),
+			}
+			got := j.Condition.Evaluate(row).(types.Boolean)
+			if got.Bool() {
+				rows = append(rows, row.Values)
+			}
+		}
+	}
+
+	return &types.Relation{
+		Schema: schema,
+		Rows:   rows,
+	}
+}
+
+func combineSchemas(a, b types.TableSchema) types.TableSchema {
+	var columns []types.ColumnSchema
+	columns = append(columns, a.Columns...)
+	columns = append(columns, b.Columns...)
+	return types.TableSchema{Columns: columns}
+}
+
+func combineRow(a, b []types.Value) []types.Value {
+	var rows []types.Value
+	rows = append(rows, a...)
+	rows = append(rows, b...)
+	return rows
+}

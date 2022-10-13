@@ -27,6 +27,17 @@ func (s TableSchema) Check(row []Value) error {
 	return nil
 }
 
+func (s TableSchema) Prefix(name string) TableSchema {
+	columns := make([]ColumnSchema, len(s.Columns))
+	for i, col := range s.Columns {
+		columns[i] = ColumnSchema{
+			Name: fmt.Sprintf("%s.%s", name, col.Name),
+			Type: col.Type,
+		}
+	}
+	return TableSchema{columns}
+}
+
 type ColumnSchema struct {
 	Name string
 	Type Type

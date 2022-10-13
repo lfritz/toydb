@@ -8,52 +8,23 @@ import (
 	"github.com/lfritz/toydb/types"
 )
 
-func sampleRows() [][]types.Value {
-	return [][]types.Value{
-		[]types.Value{types.NewBoolean(false), types.NewText("hello")},
-		[]types.Value{types.NewBoolean(true), types.NewText("ciao")},
-	}
-}
-
-func sampleDatabase(t *testing.T) *storage.Database {
-	db := storage.NewDatabase()
-	table, err := db.CreateTable("mytable", sampleSchema())
-	if err != nil {
-		t.Fatalf("CreateTable returned error: %v", err)
-	}
-
-	for _, row := range sampleRows() {
-		err := table.Insert(row)
-		if err != nil {
-			t.Fatalf("Insert returned error: %v", err)
-		}
-	}
-
-	return db
-}
-
 func TestLoad(t *testing.T) {
-	schema := sampleSchema()
-	db := sampleDatabase(t)
-	l := NewLoad("mytable", schema)
-	got := l.Run(db)
-	want := &types.Relation{
-		Schema: schema,
-		Rows:   sampleRows(),
-	}
+	sampleData := storage.GetSampleData()
+	l := NewLoad("films", sampleData.Films.Schema)
+	got := l.Run(sampleData.Database)
+	want := sampleData.Films
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Run returned %v, want %v", got, want)
 	}
 }
 
 func TestSelect(t *testing.T) {
-	schema := sampleSchema()
-	db := sampleDatabase(t)
-	l := NewLoad("mytable", schema)
+	sampleData := storage.GetSampleData()
+	l := NewLoad("films", sampleData.Films.Schema)
 	condition, err := NewBinaryOperation(
-		NewColumnReference(0, types.TypeBoolean),
-		NewConstant(types.NewBoolean(true)),
-		BinaryOperatorEq,
+		NewColumnReference(2, types.TypeDate), // release_date
+		NewConstant(types.NewDate(1925, 1, 1)),
+		BinaryOperatorLt,
 	)
 	if err != nil {
 		t.Fatalf("NewBinaryOperation returned error: %v", err)
@@ -63,10 +34,13 @@ func TestSelect(t *testing.T) {
 		t.Fatalf("NewSelect returned error: %v", err)
 	}
 
-	got := s.Run(db)
+	got := s.Run(sampleData.Database)
 	want := &types.Relation{
-		Schema: schema,
-		Rows:   [][]types.Value{[]types.Value{types.NewBoolean(true), types.NewText("ciao")}},
+		Schema: sampleData.Films.Schema,
+		Rows: [][]types.Value{
+			{types.NewDecimal("2"), types.NewText("The Kid"), types.NewDate(1921, 1, 21), types.NewDecimal("2")},
+			{types.NewDecimal("3"), types.NewText("Sherlock Jr."), types.NewDate(1924, 4, 21), types.NewDecimal("1")},
+		},
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Run returned %v, want %v", got, want)
@@ -77,36 +51,87 @@ func TestProject(t *testing.T) {
 	want := &types.Relation{
 		Schema: types.TableSchema{
 			Columns: []types.ColumnSchema{
-				types.ColumnSchema{"bar", types.TypeText},
-				types.ColumnSchema{"baz", types.TypeDecimal},
-				types.ColumnSchema{"qux", types.TypeBoolean},
+				types.ColumnSchema{"films.name", types.TypeText},
+				types.ColumnSchema{"c1", types.TypeDecimal},
+				types.ColumnSchema{"c2", types.TypeBoolean},
 			},
 		},
 		Rows: [][]types.Value{
-			[]types.Value{types.NewText("hello"), types.NewDecimal("123"), types.NewBoolean(true)},
-			[]types.Value{types.NewText("ciao"), types.NewDecimal("123"), types.NewBoolean(false)},
+			{types.NewText("The General"), types.NewDecimal("123"), types.NewBoolean(false)},
+			{types.NewText("The Kid"), types.NewDecimal("123"), types.NewBoolean(true)},
+			{types.NewText("Sherlock Jr."), types.NewDecimal("123"), types.NewBoolean(true)},
 		},
 	}
 
-	l := NewLoad("mytable", sampleSchema())
+	sampleData := storage.GetSampleData()
+	l := NewLoad("films", sampleData.Films.Schema)
 	comparison, err := NewBinaryOperation(
-		NewColumnReference(0, types.TypeBoolean),
-		NewConstant(types.NewBoolean(false)),
-		BinaryOperatorEq,
+		NewColumnReference(2, types.TypeDate), // release_date
+		NewConstant(types.NewDate(1925, 1, 1)),
+		BinaryOperatorLt,
 	)
 	if err != nil {
 		t.Fatalf("NewBinaryOperation returned error: %v", err)
 	}
 	columns := []OutputColumn{
-		OutputColumn{"bar", NewColumnReference(1, types.TypeText)},
-		OutputColumn{"baz", NewConstant(types.NewDecimal("123"))},
-		OutputColumn{"qux", comparison},
+		OutputColumn{"films.name", NewColumnReference(1, types.TypeText)},
+		OutputColumn{"c1", NewConstant(types.NewDecimal("123"))},
+		OutputColumn{"c2", comparison},
 	}
 	p, err := NewProject(l, columns)
 	if err != nil {
 		t.Fatalf("NewProject returned error: %v", err)
 	}
-	got := p.Run(sampleDatabase(t))
+	got := p.Run(sampleData.Database)
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Run returned %v, want %v", got, want)
+	}
+}
+
+func TestJoin(t *testing.T) {
+	sampleData := storage.GetSampleData()
+
+	wantSchema := types.TableSchema{
+		Columns: []types.ColumnSchema{
+			types.ColumnSchema{"films.id", types.TypeDecimal},
+			types.ColumnSchema{"films.name", types.TypeText},
+			types.ColumnSchema{"films.release_date", types.TypeDate},
+			types.ColumnSchema{"films.director", types.TypeDecimal},
+			types.ColumnSchema{"people.id", types.TypeDecimal},
+			types.ColumnSchema{"people.name", types.TypeText},
+		},
+	}
+	wantRows := [][]types.Value{
+		{types.NewDecimal("1"), types.NewText("The General"), types.NewDate(1926, 12, 31), types.NewDecimal("1"), types.NewDecimal("1"), types.NewText("Buster Keaton")},
+		{types.NewDecimal("2"), types.NewText("The Kid"), types.NewDate(1921, 1, 21), types.NewDecimal("2"), types.NewDecimal("2"), types.NewText("Charlie Chaplin")},
+		{types.NewDecimal("3"), types.NewText("Sherlock Jr."), types.NewDate(1924, 4, 21), types.NewDecimal("1"), types.NewDecimal("1"), types.NewText("Buster Keaton")},
+	}
+	want := &types.Relation{
+		Schema: wantSchema,
+		Rows:   wantRows,
+	}
+
+	left := NewLoad("films", sampleData.Films.Schema)
+	right := NewLoad("people", sampleData.People.Schema)
+	condition, err := NewBinaryOperation(
+		NewColumnReference(3, types.TypeDecimal),
+		NewColumnReference(4, types.TypeDecimal),
+		BinaryOperatorEq,
+	)
+	if err != nil {
+		t.Fatalf("NewBinaryOperation returned error: %v", err)
+	}
+	join, err := NewJoin(JoinTypeInner, left, right, condition)
+	if err != nil {
+		t.Fatalf("NewJoin returned error: %v", err)
+	}
+
+	gotSchema := join.Schema()
+	if !reflect.DeepEqual(gotSchema, wantSchema) {
+		t.Errorf("Schema returned %v, want %v", gotSchema, wantSchema)
+	}
+
+	got := join.Run(sampleData.Database)
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Run returned %v, want %v", got, want)
 	}
