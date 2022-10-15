@@ -32,6 +32,7 @@ func TestPlan(t *testing.T) {
 			"select * from films",
 			query.NewLoad("films", sampleData.Films.Schema),
 		},
+		// TODO
 	}
 
 	for _, c := range cases {

@@ -6,13 +6,13 @@ type TableSchema struct {
 	Columns []ColumnSchema
 }
 
-func (s TableSchema) Column(name string) (i int, t Type) {
+func (s TableSchema) Column(name string) (i int, t Type, ok bool) {
 	for i, c := range s.Columns {
 		if c.Name == name {
-			return i, c.Type
+			return i, c.Type, true
 		}
 	}
-	panic(fmt.Sprintf("column not found: %s", name))
+	return
 }
 
 func (s TableSchema) Check(row []Value) error {
