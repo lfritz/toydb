@@ -23,8 +23,8 @@ func TestSelect(t *testing.T) {
 	l := NewLoad("films", sampleData.Films.Schema)
 	condition, err := NewBinaryOperation(
 		NewColumnReference(2, types.TypeDate), // release_date
-		NewConstant(types.NewDate(1925, 1, 1)),
 		BinaryOperatorLt,
+		NewConstant(types.NewDate(1925, 1, 1)),
 	)
 	if err != nil {
 		t.Fatalf("NewBinaryOperation returned error: %v", err)
@@ -67,8 +67,8 @@ func TestProject(t *testing.T) {
 	l := NewLoad("films", sampleData.Films.Schema)
 	comparison, err := NewBinaryOperation(
 		NewColumnReference(2, types.TypeDate), // release_date
-		NewConstant(types.NewDate(1925, 1, 1)),
 		BinaryOperatorLt,
+		NewConstant(types.NewDate(1925, 1, 1)),
 	)
 	if err != nil {
 		t.Fatalf("NewBinaryOperation returned error: %v", err)
@@ -115,8 +115,8 @@ func TestJoin(t *testing.T) {
 	right := NewLoad("people", sampleData.People.Schema)
 	condition, err := NewBinaryOperation(
 		NewColumnReference(3, types.TypeDecimal),
-		NewColumnReference(4, types.TypeDecimal),
 		BinaryOperatorEq,
+		NewColumnReference(4, types.TypeDecimal),
 	)
 	if err != nil {
 		t.Fatalf("NewBinaryOperation returned error: %v", err)

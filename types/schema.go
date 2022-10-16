@@ -1,6 +1,9 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type TableSchema struct {
 	Columns []ColumnSchema
@@ -38,6 +41,14 @@ func (s TableSchema) Prefix(name string) TableSchema {
 	return TableSchema{columns}
 }
 
+func (s TableSchema) String() string {
+	list := make([]string, len(s.Columns))
+	for i, c := range s.Columns {
+		list[i] = c.String()
+	}
+	return fmt.Sprintf("TableSchema(%s)", strings.Join(list, ", "))
+}
+
 type ColumnSchema struct {
 	Name string
 	Type Type
@@ -48,4 +59,8 @@ func (s ColumnSchema) Check(value Value) error {
 		return fmt.Errorf("wrong type: expected %v, got %v", s.Type, value.Type())
 	}
 	return nil
+}
+
+func (s ColumnSchema) String() string {
+	return fmt.Sprintf("%s %s", s.Name, s.Type)
 }

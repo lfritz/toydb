@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 // Boolean represents a boolean value.
 type Boolean struct {
 	value bool
@@ -31,4 +33,8 @@ func (b Boolean) Compare(v Value) Compared {
 		return ComparedLt
 	}
 	return ComparedGt
+}
+
+func (b Boolean) String() string {
+	return fmt.Sprintf("%v", b.value)
 }

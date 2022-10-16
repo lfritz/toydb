@@ -52,7 +52,7 @@ func convertBinaryOperation(o *sql.BinaryOperation, schema types.TableSchema) (*
 		return nil, err
 	}
 	operator := convertBinaryOperator(o.Operator)
-	return query.NewBinaryOperation(left, right, operator)
+	return query.NewBinaryOperation(left, operator, right)
 }
 
 func convertBinaryOperator(o sql.BinaryOperator) query.BinaryOperator {

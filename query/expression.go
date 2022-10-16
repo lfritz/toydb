@@ -12,6 +12,7 @@ type Expression interface {
 	Type() types.Type
 	Check(schema types.TableSchema) error
 	Evaluate(r *types.Row) types.Value
+	String() string
 }
 
 type Constant struct {
@@ -32,6 +33,10 @@ func (c Constant) Check(schema types.TableSchema) error {
 
 func (c Constant) Evaluate(r *types.Row) types.Value {
 	return c.value
+}
+
+func (c Constant) String() string {
+	return fmt.Sprintf("Constant(%s)", c.value)
 }
 
 type ColumnReference struct {
@@ -66,13 +71,17 @@ func (c *ColumnReference) Evaluate(r *types.Row) types.Value {
 	return r.Values[c.Index]
 }
 
+func (c *ColumnReference) String() string {
+	return fmt.Sprintf("ColumnReference(%d, %s)", c.Index, c.T)
+}
+
 type BinaryOperation struct {
 	Left     Expression
 	Operator BinaryOperator
 	Right    Expression
 }
 
-func NewBinaryOperation(left, right Expression, op BinaryOperator) (*BinaryOperation, error) {
+func NewBinaryOperation(left Expression, op BinaryOperator, right Expression) (*BinaryOperation, error) {
 	if left.Type() != right.Type() {
 		return nil, fmt.Errorf("incompatible types: %v, %v", left.Type(), right.Type())
 	}
@@ -114,6 +123,10 @@ func (o *BinaryOperation) Evaluate(r *types.Row) types.Value {
 	return types.NewBoolean(result)
 }
 
+func (o *BinaryOperation) String() string {
+	return fmt.Sprintf("BinaryOperation(%s %s %s)", o.Left, o.Operator, o.Right)
+}
+
 type BinaryOperator int
 
 const (
@@ -125,3 +138,21 @@ const (
 	BinaryOperatorLe
 	BinaryOperatorGe
 )
+
+func (o BinaryOperator) String() string {
+	switch o {
+	case BinaryOperatorEq:
+		return "eq"
+	case BinaryOperatorNe:
+		return "ne"
+	case BinaryOperatorLt:
+		return "lt"
+	case BinaryOperatorGt:
+		return "gt"
+	case BinaryOperatorLe:
+		return "le"
+	case BinaryOperatorGe:
+		return "ge"
+	}
+	panic(fmt.Sprintf("unexpected BinaryOperator: %d", o))
+}

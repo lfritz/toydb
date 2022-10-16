@@ -12,6 +12,7 @@ import (
 type Plan interface {
 	Schema() types.TableSchema
 	Run(db *storage.Database) *types.Relation
+	Print(printer *Printer)
 }
 
 // A Load step loads a table from the database.
@@ -37,6 +38,15 @@ func (l *Load) Run(db *storage.Database) *types.Relation {
 		panic(fmt.Sprintf("error loading table %s: %v", l.TableName, err))
 	}
 	return t
+}
+
+func (l *Load) Print(printer *Printer) {
+	printer.Print("Load {")
+	printer.Indent()
+	printer.Print("Table: %q", l.TableName)
+	printer.Print("Schema: %s", l.TableSchema)
+	printer.Unindent()
+	printer.Print("}")
 }
 
 // A Select step selects the rows matching an expression.
@@ -78,6 +88,16 @@ func (s *Select) Run(db *storage.Database) *types.Relation {
 		Schema: from.Schema,
 		Rows:   rows,
 	}
+}
+
+func (s *Select) Print(printer *Printer) {
+	printer.Print("Select {")
+	printer.Indent()
+	printer.Print("From:")
+	s.From.Print(printer)
+	printer.Print("Condition: %s", s.Condition.String())
+	printer.Unindent()
+	printer.Print("}")
 }
 
 type OutputColumn struct {
@@ -162,6 +182,21 @@ func (p *Project) Run(db *storage.Database) *types.Relation {
 	}
 }
 
+func (p *Project) Print(printer *Printer) {
+	printer.Print("Project {")
+	printer.Indent()
+	printer.Print("From:")
+	p.From.Print(printer)
+	printer.Print("Columns:")
+	printer.Indent()
+	for i, c := range p.Columns {
+		printer.Print("(%d) %s", i, c)
+	}
+	printer.Unindent()
+	printer.Unindent()
+	printer.Print("}")
+}
+
 type JoinType int
 
 const (
@@ -169,6 +204,18 @@ const (
 	JoinTypeLeftOuter
 	JoinTypeRightOuter
 )
+
+func (t JoinType) String() string {
+	switch t {
+	case JoinTypeInner:
+		return "inner"
+	case JoinTypeLeftOuter:
+		return "left outer"
+	case JoinTypeRightOuter:
+		return "right outer"
+	}
+	panic(fmt.Sprintf("unexpected JoinType: %d", t))
+}
 
 type Join struct {
 	Type           JoinType
@@ -227,6 +274,19 @@ func (j *Join) Run(db *storage.Database) *types.Relation {
 		Schema: schema,
 		Rows:   rows,
 	}
+}
+
+func (j *Join) Print(printer *Printer) {
+	printer.Print("Join {")
+	printer.Indent()
+	printer.Print("Type: %s", j.Type)
+	printer.Print("Left:")
+	j.Left.Print(printer)
+	printer.Print("Right:")
+	j.Right.Print(printer)
+	printer.Print("Condition: %s", j.Condition)
+	printer.Unindent()
+	printer.Print("}")
 }
 
 func combineSchemas(a, b types.TableSchema) types.TableSchema {

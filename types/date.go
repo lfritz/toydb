@@ -69,3 +69,7 @@ func (d Date) Compare(v Value) Compared {
 	}
 	return ComparedEq
 }
+
+func (d Date) String() string {
+	return fmt.Sprintf("%4d-%2d-%2d", d.year, d.month, d.day)
+}

@@ -85,7 +85,31 @@ func TestDecimalCompare(t *testing.T) {
 	}
 }
 
-func TestNormalize(t *testing.T) {
+func TestDecimalString(t *testing.T) {
+	cases := []string{
+		"0",
+		"123",
+		"123.45",
+		"0.123",
+		"0.000123",
+		"-123",
+		"-123.45",
+		"-0.123",
+		"-0.000123",
+	}
+	for _, c := range cases {
+		decimal, err := ParseDecimal(c)
+		if err != nil {
+			t.Fatalf("ParseDecimal(%q) returned error: %v", c, err)
+		}
+		got := decimal.String()
+		if got != c {
+			t.Errorf("Decimal %s formatted as %q", c, got)
+		}
+	}
+}
+
+func TestDecimalNormalize(t *testing.T) {
 	cases := []struct {
 		negative bool
 		digits   []uint8

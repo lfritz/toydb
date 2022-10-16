@@ -28,7 +28,7 @@ func sampleRow() *types.Row {
 	}
 }
 
-func TestContantType(t *testing.T) {
+func TestConstantType(t *testing.T) {
 	c := NewConstant(types.NewDecimal("123"))
 	got := c.Type()
 	want := types.TypeDecimal
@@ -37,7 +37,7 @@ func TestContantType(t *testing.T) {
 	}
 }
 
-func TestContantEvaluate(t *testing.T) {
+func TestConstantEvaluate(t *testing.T) {
 	value := types.NewDecimal("123")
 	got := NewConstant(value).Evaluate(sampleRow())
 	if got.Compare(value) != types.ComparedEq {
@@ -88,9 +88,9 @@ func TestColumnReferenceEvaluate(t *testing.T) {
 func binaryOperation(t *testing.T, left, right string, op BinaryOperator) *BinaryOperation {
 	l := NewConstant(types.NewDecimal(left))
 	r := NewConstant(types.NewDecimal(right))
-	expression, err := NewBinaryOperation(l, r, op)
+	expression, err := NewBinaryOperation(l, op, r)
 	if err != nil {
-		t.Fatalf("NewBinaryOperation(%v, %v, %v) returned error: %v", l, r, op, err)
+		t.Fatalf("NewBinaryOperation(%v, %v, %v) returned error: %v", l, op, r, err)
 	}
 	return expression
 }
@@ -131,8 +131,31 @@ func TestBinaryOperationEvaluate(t *testing.T) {
 	left := NewConstant(types.NewDecimal("133"))
 	right := NewConstant(types.NewBoolean(false))
 	op := BinaryOperatorEq
-	_, err := NewBinaryOperation(left, right, op)
+	_, err := NewBinaryOperation(left, op, right)
 	if err == nil {
-		t.Errorf("NewBinaryOperation(%v, %v, %v) did not return error", left, right, op)
+		t.Errorf("NewBinaryOperation(%v, %v, %v) did not return error", left, op, right)
+	}
+}
+
+func TestExpressionString(t *testing.T) {
+	constant := NewConstant(types.NewDecimal("123"))
+	columnReference := NewColumnReference(1, types.TypeDecimal)
+	binaryOperation, err := NewBinaryOperation(constant, BinaryOperatorEq, columnReference)
+	if err != nil {
+		t.Fatalf("NewBinaryOperation returned an error: %v", err)
+	}
+	cases := []struct {
+		e    Expression
+		want string
+	}{
+		{constant, "Constant(123)"},
+		{columnReference, "ColumnReference(1, decimal)"},
+		{binaryOperation, "BinaryOperation(Constant(123) eq ColumnReference(1, decimal))"},
+	}
+	for _, c := range cases {
+		got := c.e.String()
+		if got != c.want {
+			t.Errorf("String() returned %q, want %q", got, c.want)
+		}
 	}
 }

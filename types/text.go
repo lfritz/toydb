@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 // Text represents a Unicode string of arbitrary size.
 type Text struct {
 	value string
@@ -27,4 +29,8 @@ func (t Text) Compare(v Value) Compared {
 		return ComparedGt
 	}
 	return ComparedEq
+}
+
+func (t Text) String() string {
+	return fmt.Sprintf("%q", t.value)
 }

@@ -1,6 +1,9 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Decimal represents a decimal number of arbitrary size.
 type Decimal struct {
@@ -110,6 +113,23 @@ func (d Decimal) Compare(v Value) Compared {
 	}
 
 	return ComparedEq
+}
+
+func (d Decimal) String() string {
+	builder := new(strings.Builder)
+	if d.negative {
+		fmt.Fprint(builder, "-")
+	}
+	if d.n == 0 {
+		fmt.Fprint(builder, "0")
+	}
+	for i, digit := range d.digits {
+		if i == d.n {
+			fmt.Fprint(builder, ".")
+		}
+		fmt.Fprintf(builder, "%d", digit)
+	}
+	return builder.String()
 }
 
 func normalize(negative bool, digits []uint8, n int) Decimal {
