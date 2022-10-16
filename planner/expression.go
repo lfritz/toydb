@@ -2,6 +2,7 @@ package planner
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/lfritz/toydb/query"
 	"github.com/lfritz/toydb/sql"
@@ -10,32 +11,48 @@ import (
 
 func ConvertExpression(input sql.Expression, schema types.TableSchema) (query.Expression, error) {
 	switch e := input.(type) {
+	case sql.ColumnReference:
+		return convertColumnReference(e, schema)
 	case sql.String:
 		return query.NewConstant(types.NewText(e.Value)), nil
 	case sql.Boolean:
 		return query.NewConstant(types.NewBoolean(e.Value)), nil
 	case sql.Number:
 		return query.NewConstant(e.Value), nil
-	case sql.ColumnReference:
-		name := fmt.Sprintf("%s.%s", e.Relation, e.Name)
-		i, t, ok := schema.Column(name)
+	case *sql.BinaryOperation:
+		return convertBinaryOperation(e, schema)
+	}
+	panic(fmt.Sprintf("unexpected sql.Expression: %T", input))
+}
+
+func convertColumnReference(r sql.ColumnReference, schema types.TableSchema) (*query.ColumnReference, error) {
+	if r.Relation == "" {
+		index, err := FindColumn(r.Name, schema)
+		if err != nil {
+			return nil, err
+		}
+		return query.NewColumnReference(index, schema.Columns[index].Type), nil
+	} else {
+		name := fmt.Sprintf("%s.%s", r.Relation, r.Name)
+		index, t, ok := schema.Column(name)
 		if !ok {
 			return nil, fmt.Errorf("Column not found: %s", name)
 		}
-		return query.NewColumnReference(i, t), nil
-	case *sql.BinaryOperation:
-		left, err := ConvertExpression(e.Left, schema)
-		if err != nil {
-			return nil, err
-		}
-		right, err := ConvertExpression(e.Right, schema)
-		if err != nil {
-			return nil, err
-		}
-		operator := convertBinaryOperator(e.Operator)
-		return query.NewBinaryOperation(left, right, operator)
+		return query.NewColumnReference(index, t), nil
 	}
-	return nil, NotImplemented
+}
+
+func convertBinaryOperation(o *sql.BinaryOperation, schema types.TableSchema) (*query.BinaryOperation, error) {
+	left, err := ConvertExpression(o.Left, schema)
+	if err != nil {
+		return nil, err
+	}
+	right, err := ConvertExpression(o.Right, schema)
+	if err != nil {
+		return nil, err
+	}
+	operator := convertBinaryOperator(o.Operator)
+	return query.NewBinaryOperation(left, right, operator)
 }
 
 func convertBinaryOperator(o sql.BinaryOperator) query.BinaryOperator {
@@ -54,4 +71,23 @@ func convertBinaryOperator(o sql.BinaryOperator) query.BinaryOperator {
 		return query.BinaryOperatorGe
 	}
 	panic(fmt.Sprintf("unexpected value for BinaryOperator: %v", o))
+}
+
+func FindColumn(name string, schema types.TableSchema) (int, error) {
+	suffix := fmt.Sprintf(".%s", name)
+	var index int
+	var found bool
+	for i, col := range schema.Columns {
+		if strings.HasSuffix(col.Name, suffix) {
+			if found {
+				return 0, fmt.Errorf("ambiguous column reference: %s", name)
+			}
+			index = i
+			found = true
+		}
+	}
+	if !found {
+		return 0, fmt.Errorf("column not found: %s", name)
+	}
+	return index, nil
 }

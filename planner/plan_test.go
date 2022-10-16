@@ -7,6 +7,7 @@ import (
 	"github.com/lfritz/toydb/query"
 	"github.com/lfritz/toydb/sql"
 	"github.com/lfritz/toydb/storage"
+	"github.com/lfritz/toydb/types"
 )
 
 func parse(t *testing.T, input string) *sql.SelectStatement {
@@ -31,6 +32,18 @@ func TestPlan(t *testing.T) {
 		{
 			"select * from films",
 			query.NewLoad("films", sampleData.Films.Schema),
+		},
+		{
+			"select id, name, release_date, director from films",
+			&query.Project{
+				From: query.NewLoad("films", sampleData.Films.Schema),
+				Columns: []query.OutputColumn{
+					query.OutputColumn{"films.id", &query.ColumnReference{0, types.TypeDecimal}},
+					query.OutputColumn{"films.name", &query.ColumnReference{1, types.TypeText}},
+					query.OutputColumn{"films.release_date", &query.ColumnReference{2, types.TypeDate}},
+					query.OutputColumn{"films.director", &query.ColumnReference{3, types.TypeDecimal}},
+				},
+			},
 		},
 		// TODO
 	}

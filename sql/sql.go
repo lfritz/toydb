@@ -44,7 +44,7 @@ func (t TableName) String() string {
 	return fmt.Sprintf("Table(%s)", t.Name)
 }
 
-// A TableName is a TableReference that specifies a join.
+// A Join is a TableReference that specifies a join.
 type Join struct {
 	Type      JoinType
 	Left      TableReference

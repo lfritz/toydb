@@ -69,7 +69,6 @@ func TestConvertExpressionInvalid(t *testing.T) {
 	cases := []sql.Expression{
 		sql.ColumnReference{"foo", "id"},
 		sql.ColumnReference{"films", "foo"},
-		sql.ColumnReference{"", "id"},
 		&sql.BinaryOperation{sql.ColumnReference{"foo", "id"}, op, four},
 		&sql.BinaryOperation{sql.ColumnReference{"films", "name"}, op, four},
 	}
@@ -79,5 +78,31 @@ func TestConvertExpressionInvalid(t *testing.T) {
 		if err == nil {
 			t.Errorf("ConvertExpression did not return error for %v", c)
 		}
+	}
+}
+
+func TestFindColumn(t *testing.T) {
+	schema := types.TableSchema{
+		Columns: []types.ColumnSchema{
+			types.ColumnSchema{"films.name", types.TypeText},
+			types.ColumnSchema{"films.release_date", types.TypeDate},
+			types.ColumnSchema{"people.name", types.TypeText},
+		},
+	}
+
+	name := "release_date"
+	want := 1
+	got, err := FindColumn(name, schema)
+	if err != nil {
+		t.Errorf("FindColumn(%q) returned error: %v", name, err)
+	}
+	if got != want {
+		t.Errorf("FindColumn(%q) returned %v, want %v", name, got, want)
+	}
+
+	name = "name"
+	_, err = FindColumn(name, schema)
+	if err == nil {
+		t.Errorf("FindColumn(%q) did not return error", name)
 	}
 }
