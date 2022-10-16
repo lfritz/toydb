@@ -22,7 +22,7 @@ func parse(t *testing.T, input string) *sql.SelectStatement {
 	return selectStatement
 }
 
-func TestPlan(t *testing.T) {
+func TestPlanValid(t *testing.T) {
 	sampleData := storage.GetSampleData()
 
 	cases := []struct {
@@ -45,6 +45,22 @@ func TestPlan(t *testing.T) {
 				},
 			},
 		},
+		{
+			"select id from films where name = 'The General'",
+			&query.Project{
+				From: &query.Select{
+					From: query.NewLoad("films", sampleData.Films.Schema),
+					Condition: &query.BinaryOperation{
+						&query.ColumnReference{1, types.TypeText},
+						query.BinaryOperatorEq,
+						query.NewConstant(types.NewText("The General")),
+					},
+				},
+				Columns: []query.OutputColumn{
+					query.OutputColumn{"films.id", &query.ColumnReference{0, types.TypeDecimal}},
+				},
+			},
+		},
 		// TODO
 	}
 
@@ -56,6 +72,22 @@ func TestPlan(t *testing.T) {
 		}
 		if !reflect.DeepEqual(got, c.want) {
 			t.Errorf("Query plan for\n%s\nis:\n%q\nwant:\n%v\n", c.stmt, got, c.want)
+		}
+	}
+}
+
+func TestPlanInvalid(t *testing.T) {
+	sampleData := storage.GetSampleData()
+	cases := []string{
+		"select * from foo",
+		"select foo from films",
+		"select id from films where foo = 123",
+	}
+	for _, c := range cases {
+		stmt := parse(t, c)
+		_, err := Plan(stmt, sampleData.Database)
+		if err == nil {
+			t.Fatalf("Plan did not return error for: %s", c)
 		}
 	}
 }

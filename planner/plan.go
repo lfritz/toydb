@@ -30,6 +30,18 @@ func Plan(stmt *sql.SelectStatement, db *storage.Database) (query.Plan, error) {
 		panic(fmt.Sprintf("unexpected TableReference: %T", stmt.From))
 	}
 
+	if stmt.Where != nil {
+		schema := plan.Schema()
+		condition, err := ConvertExpression(stmt.Where, schema)
+		if err != nil {
+			return nil, err
+		}
+		plan, err = query.NewSelect(plan, condition)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	switch what := stmt.What.(type) {
 	case sql.Star:
 		// ok
@@ -50,11 +62,6 @@ func Plan(stmt *sql.SelectStatement, db *storage.Database) (query.Plan, error) {
 		}
 	default:
 		panic(fmt.Sprintf("unexpected SelectList: %T", stmt.What))
-	}
-
-	if stmt.Where != nil {
-		// TODO
-		return nil, NotImplemented
 	}
 
 	return plan, nil
