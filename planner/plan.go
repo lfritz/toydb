@@ -13,21 +13,9 @@ var NotImplemented = errors.New("not implemented")
 
 // Plan creates a query plan for the query.
 func Plan(stmt *sql.SelectStatement, db *storage.Database) (query.Plan, error) {
-	var err error
-	var plan query.Plan
-
-	switch f := stmt.From.(type) {
-	case sql.TableName:
-		table, err := db.Table(f.Name)
-		if err != nil {
-			return nil, err
-		}
-		plan = query.NewLoad(f.Name, table.Schema)
-	case *sql.Join:
-		// TODO
-		return nil, NotImplemented
-	default:
-		panic(fmt.Sprintf("unexpected TableReference: %T", stmt.From))
+	plan, err := convertTableReference(stmt.From, db)
+	if err != nil {
+		return nil, err
 	}
 
 	if stmt.Where != nil {
@@ -54,6 +42,7 @@ func Plan(stmt *sql.SelectStatement, db *storage.Database) (query.Plan, error) {
 				return nil, err
 			}
 			columns[i].Expression = converted
+			// TODO figure out the logic for setting the column name
 			columns[i].Name = schema.Columns[i].Name
 		}
 		plan, err = query.NewProject(plan, columns)
@@ -65,4 +54,44 @@ func Plan(stmt *sql.SelectStatement, db *storage.Database) (query.Plan, error) {
 	}
 
 	return plan, nil
+}
+
+func convertTableReference(ref sql.TableReference, db *storage.Database) (query.Plan, error) {
+	switch f := ref.(type) {
+	case sql.TableName:
+		table, err := db.Table(f.Name)
+		if err != nil {
+			return nil, err
+		}
+		return query.NewLoad(f.Name, table.Schema), nil
+	case *sql.Join:
+		joinType := convertJoinType(f.Type)
+		left, err := convertTableReference(f.Left, db)
+		if err != nil {
+			return nil, err
+		}
+		right, err := convertTableReference(f.Right, db)
+		if err != nil {
+			return nil, err
+		}
+		schema := query.CombineSchemas(left.Schema(), right.Schema())
+		condition, err := ConvertExpression(f.Condition, schema)
+		if err != nil {
+			return nil, err
+		}
+		return query.NewJoin(joinType, left, right, condition)
+	}
+	panic(fmt.Sprintf("unexpected TableReference: %T", ref))
+}
+
+func convertJoinType(input sql.JoinType) query.JoinType {
+	switch input {
+	case sql.JoinTypeInner:
+		return query.JoinTypeInner
+	case sql.JoinTypeLeftOuter:
+		return query.JoinTypeLeftOuter
+	case sql.JoinTypeRightOuter:
+		return query.JoinTypeRightOuter
+	}
+	panic(fmt.Sprintf("unexpected JoinType: %d", input))
 }

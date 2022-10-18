@@ -232,7 +232,7 @@ func NewJoin(t JoinType, left, right Plan, condition Expression) (*Join, error) 
 		return nil, fmt.Errorf("invalid join condition: %v", condition)
 	}
 
-	combinedSchema := combineSchemas(left.Schema(), right.Schema())
+	combinedSchema := CombineSchemas(left.Schema(), right.Schema())
 	if err := condition.Check(combinedSchema); err != nil {
 		return nil, err
 	}
@@ -289,7 +289,7 @@ func (j *Join) Print(printer *Printer) {
 	printer.Println("}")
 }
 
-func combineSchemas(a, b types.TableSchema) types.TableSchema {
+func CombineSchemas(a, b types.TableSchema) types.TableSchema {
 	var columns []types.ColumnSchema
 	columns = append(columns, a.Columns...)
 	columns = append(columns, b.Columns...)

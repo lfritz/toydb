@@ -25,6 +25,20 @@ func parse(t *testing.T, input string) *sql.SelectStatement {
 func TestPlanValid(t *testing.T) {
 	sampleData := storage.GetSampleData()
 
+	join, err := query.NewJoin(
+		query.JoinTypeInner,
+		query.NewLoad("films", sampleData.Films.Schema),
+		query.NewLoad("people", sampleData.People.Schema),
+		&query.BinaryOperation{
+			&query.ColumnReference{3, types.TypeDecimal},
+			query.BinaryOperatorEq,
+			&query.ColumnReference{4, types.TypeDecimal},
+		},
+	)
+	if err != nil {
+		t.Fatalf("query.NewJoin returned error: %v", err)
+	}
+
 	cases := []struct {
 		stmt string
 		want query.Plan
@@ -61,7 +75,16 @@ func TestPlanValid(t *testing.T) {
 				},
 			},
 		},
-		// TODO
+		{
+			"select films.id, people.id from films join people on films.director = people.id",
+			&query.Project{
+				From: join,
+				Columns: []query.OutputColumn{
+					query.OutputColumn{"films.id", &query.ColumnReference{0, types.TypeDecimal}},
+					query.OutputColumn{"people.id", &query.ColumnReference{4, types.TypeDecimal}},
+				},
+			},
+		},
 	}
 
 	for _, c := range cases {
