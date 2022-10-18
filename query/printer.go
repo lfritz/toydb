@@ -8,14 +8,23 @@ import (
 type Printer struct {
 	builder     strings.Builder
 	indentation int
+	inLine      bool
+}
+
+func (p *Printer) Println(format string, a ...any) {
+	p.Print(format, a...)
+	fmt.Fprintln(&p.builder)
+	p.inLine = false
 }
 
 func (p *Printer) Print(format string, a ...any) {
-	for i := 0; i < p.indentation; i++ {
-		fmt.Fprint(&p.builder, "    ")
+	if !p.inLine {
+		for i := 0; i < p.indentation; i++ {
+			fmt.Fprint(&p.builder, "    ")
+		}
 	}
 	fmt.Fprintf(&p.builder, format, a...)
-	fmt.Fprintln(&p.builder)
+	p.inLine = true
 }
 
 func (p *Printer) Indent() {
@@ -30,4 +39,14 @@ func (p *Printer) Unindent() {
 
 func (p *Printer) String() string {
 	return p.builder.String()
+}
+
+type Printable interface {
+	Print(printer *Printer)
+}
+
+func Print(p Printable) string {
+	printer := new(Printer)
+	p.Print(printer)
+	return printer.String()
 }

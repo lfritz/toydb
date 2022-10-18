@@ -71,8 +71,8 @@ func TestPlanValid(t *testing.T) {
 			t.Fatalf("Plan returned error: %v", err)
 		}
 		if !reflect.DeepEqual(got, c.want) {
-			// TODO print got and c.want with Print
-			t.Errorf("Query plan for\n%s\nis:\n%q\nwant:\n%v\n", c.stmt, got, c.want)
+			t.Errorf("Query plan for\n%s\nis:\n%swant:\n%v",
+				c.stmt, query.Print(got), query.Print(c.want))
 		}
 	}
 }

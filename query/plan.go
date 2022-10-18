@@ -41,12 +41,12 @@ func (l *Load) Run(db *storage.Database) *types.Relation {
 }
 
 func (l *Load) Print(printer *Printer) {
-	printer.Print("Load {")
+	printer.Println("Load {")
 	printer.Indent()
-	printer.Print("Table: %q", l.TableName)
-	printer.Print("Schema: %s", l.TableSchema)
+	printer.Println("Table: %q", l.TableName)
+	printer.Println("Schema: %s", l.TableSchema)
 	printer.Unindent()
-	printer.Print("}")
+	printer.Println("}")
 }
 
 // A Select step selects the rows matching an expression.
@@ -91,13 +91,13 @@ func (s *Select) Run(db *storage.Database) *types.Relation {
 }
 
 func (s *Select) Print(printer *Printer) {
-	printer.Print("Select {")
+	printer.Println("Select {")
 	printer.Indent()
-	printer.Print("From:")
+	printer.Print("From: ")
 	s.From.Print(printer)
-	printer.Print("Condition: %s", s.Condition.String())
+	printer.Println("Condition: %s", s.Condition.String())
 	printer.Unindent()
-	printer.Print("}")
+	printer.Println("}")
 }
 
 type OutputColumn struct {
@@ -183,18 +183,18 @@ func (p *Project) Run(db *storage.Database) *types.Relation {
 }
 
 func (p *Project) Print(printer *Printer) {
-	printer.Print("Project {")
+	printer.Println("Project {")
 	printer.Indent()
-	printer.Print("From:")
+	printer.Print("From: ")
 	p.From.Print(printer)
-	printer.Print("Columns:")
+	printer.Println("Columns:")
 	printer.Indent()
 	for i, c := range p.Columns {
-		printer.Print("(%d) %s", i, c)
+		printer.Println("(%d) %s", i, c)
 	}
 	printer.Unindent()
 	printer.Unindent()
-	printer.Print("}")
+	printer.Println("}")
 }
 
 type JoinType int
@@ -277,16 +277,16 @@ func (j *Join) Run(db *storage.Database) *types.Relation {
 }
 
 func (j *Join) Print(printer *Printer) {
-	printer.Print("Join {")
+	printer.Println("Join {")
 	printer.Indent()
-	printer.Print("Type: %s", j.Type)
-	printer.Print("Left:")
+	printer.Println("Type: %s", j.Type)
+	printer.Print("Left: ")
 	j.Left.Print(printer)
-	printer.Print("Right:")
+	printer.Print("Right: ")
 	j.Right.Print(printer)
-	printer.Print("Condition: %s", j.Condition)
+	printer.Println("Condition: %s", j.Condition)
 	printer.Unindent()
-	printer.Print("}")
+	printer.Println("}")
 }
 
 func combineSchemas(a, b types.TableSchema) types.TableSchema {
