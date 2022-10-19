@@ -20,7 +20,7 @@ func Plan(stmt *sql.SelectStatement, db *storage.Database) (query.Plan, error) {
 
 	if stmt.Where != nil {
 		schema := plan.Schema()
-		condition, err := ConvertExpression(stmt.Where, schema)
+		condition, _, err := ConvertExpression(stmt.Where, schema)
 		if err != nil {
 			return nil, err
 		}
@@ -37,13 +37,12 @@ func Plan(stmt *sql.SelectStatement, db *storage.Database) (query.Plan, error) {
 		schema := plan.Schema()
 		columns := make([]query.OutputColumn, len(what.Expressions))
 		for i, e := range what.Expressions {
-			converted, err := ConvertExpression(e, schema)
+			converted, name, err := ConvertExpression(e, schema)
 			if err != nil {
 				return nil, err
 			}
 			columns[i].Expression = converted
-			// TODO figure out the logic for setting the column name
-			columns[i].Name = schema.Columns[i].Name
+			columns[i].Name = name
 		}
 		plan, err = query.NewProject(plan, columns)
 		if err != nil {
@@ -75,7 +74,7 @@ func convertTableReference(ref sql.TableReference, db *storage.Database) (query.
 			return nil, err
 		}
 		schema := query.CombineSchemas(left.Schema(), right.Schema())
-		condition, err := ConvertExpression(f.Condition, schema)
+		condition, _, err := ConvertExpression(f.Condition, schema)
 		if err != nil {
 			return nil, err
 		}

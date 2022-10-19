@@ -17,22 +17,27 @@ func TestConvertExpressionValid(t *testing.T) {
 	cases := []struct {
 		input sql.Expression
 		want  query.Expression
+		name  string
 	}{
 		{
 			sql.String{"hello"},
 			query.NewConstant(types.NewText("hello")),
+			"",
 		},
 		{
 			sql.Boolean{true},
 			query.NewConstant(types.NewBoolean(true)),
+			"",
 		},
 		{
 			sql.Number{types.NewDecimal("123")},
 			query.NewConstant(types.NewDecimal("123")),
+			"",
 		},
 		{
 			sql.ColumnReference{"films", "name"},
 			query.NewColumnReference(1, types.TypeText),
+			"films.name",
 		},
 		{
 			&sql.BinaryOperation{
@@ -45,17 +50,21 @@ func TestConvertExpressionValid(t *testing.T) {
 				query.BinaryOperatorEq,
 				query.NewColumnReference(0, types.TypeDecimal),
 			},
+			"",
 		},
 	}
 
 	for _, c := range cases {
-		got, err := ConvertExpression(c.input, schema)
+		got, name, err := ConvertExpression(c.input, schema)
 		if err != nil {
 			t.Errorf("ConvertExpression returned error: %v", err)
 			continue
 		}
 		if !reflect.DeepEqual(got, c.want) {
 			t.Errorf("ConvertExpression(%v, schema) returned %v, want %v", c.input, got, c.want)
+		}
+		if name != c.name {
+			t.Errorf("CovnertExpression(%v, schema) returned name %q, want %q", c.input, name, c.name)
 		}
 	}
 }
@@ -74,7 +83,7 @@ func TestConvertExpressionInvalid(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		_, err := ConvertExpression(c, schema)
+		_, _, err := ConvertExpression(c, schema)
 		if err == nil {
 			t.Errorf("ConvertExpression did not return error for %v", c)
 		}
@@ -91,17 +100,21 @@ func TestFindColumn(t *testing.T) {
 	}
 
 	name := "release_date"
-	want := 1
-	got, err := FindColumn(name, schema)
+	wantIndex := 1
+	wantName := "films.release_date"
+	index, name, err := FindColumn(name, schema)
 	if err != nil {
 		t.Errorf("FindColumn(%q) returned error: %v", name, err)
 	}
-	if got != want {
-		t.Errorf("FindColumn(%q) returned %v, want %v", name, got, want)
+	if index != wantIndex {
+		t.Errorf("FindColumn(%q) returned index %v, want %v", name, index, wantIndex)
+	}
+	if name != wantName {
+		t.Errorf("FindColumn(%q) returned name %v, want %v", name, name, wantName)
 	}
 
 	name = "name"
-	_, err = FindColumn(name, schema)
+	_, _, err = FindColumn(name, schema)
 	if err == nil {
 		t.Errorf("FindColumn(%q) did not return error", name)
 	}
