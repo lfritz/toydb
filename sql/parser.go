@@ -2,15 +2,15 @@ package sql
 
 import "github.com/lfritz/toydb/types"
 
-// Parse parses an SQL statement with optional semicolon at the end.
-func Parse(input string) (Statement, error) {
+// Parse parses a select statement with optional semicolon at the end.
+func Parse(input string) (*SelectStatement, error) {
 	ts, err := Tokenize(input)
 	if err != nil {
 		return nil, err
 	}
 	tokens := &TokenList{input, ts}
 
-	statement, tokens, err := ParseStatement(tokens)
+	statement, tokens, err := ParseSelectStatement(tokens)
 	if err != nil {
 		return nil, err
 	}
@@ -24,10 +24,6 @@ func Parse(input string) (Statement, error) {
 }
 
 type Parser[T any] func(tokens *TokenList) (T, *TokenList, error)
-
-func ParseStatement(tokens *TokenList) (Statement, *TokenList, error) {
-	return ParseSelectStatement(tokens)
-}
 
 func ParseSelectStatement(tokens *TokenList) (*SelectStatement, *TokenList, error) {
 	err := tokens.Consume(TokenTypeSelect)

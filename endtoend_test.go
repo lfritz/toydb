@@ -31,12 +31,8 @@ func TestAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("sql.Parse returned error: %v", err)
 	}
-	selectStmt, ok := stmt.(*sql.SelectStatement)
-	if !ok {
-		t.Fatalf("sql.Parse returned %T", stmt)
-	}
 
-	plan, err := planner.Plan(selectStmt, sampleData.Database)
+	plan, err := planner.Plan(stmt, sampleData.Database)
 	if err != nil {
 		t.Fatalf("planner.Plan returned error: %v", err)
 	}

@@ -15,11 +15,7 @@ func parse(t *testing.T, input string) *sql.SelectStatement {
 	if err != nil {
 		t.Fatalf("sql.Parse returned error for %q: %v", input, err)
 	}
-	selectStatement, ok := statement.(*sql.SelectStatement)
-	if !ok {
-		t.Fatalf("Not a select statement: %q", input)
-	}
-	return selectStatement
+	return statement
 }
 
 func TestPlanValid(t *testing.T) {
