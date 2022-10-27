@@ -14,11 +14,11 @@ func ConvertExpression(input sql.Expression, schema types.TableSchema) (query.Ex
 	case sql.ColumnReference:
 		return convertColumnReference(e, schema)
 	case sql.String:
-		return query.NewConstant(types.NewText(e.Value)), "", nil
+		return query.NewConstant(types.NewValue(types.NewText(e.Value))), "", nil
 	case sql.Boolean:
-		return query.NewConstant(types.NewBoolean(e.Value)), "", nil
+		return query.NewConstant(types.NewValue(types.NewBoolean(e.Value))), "", nil
 	case sql.Number:
-		return query.NewConstant(e.Value), "", nil
+		return query.NewConstant(types.NewValue(e.Value)), "", nil
 	case *sql.BinaryOperation:
 		return convertBinaryOperation(e, schema)
 	}

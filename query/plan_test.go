@@ -24,7 +24,7 @@ func TestSelect(t *testing.T) {
 	condition, err := NewBinaryOperation(
 		NewColumnReference(2, types.TypeDate), // release_date
 		BinaryOperatorLt,
-		NewConstant(types.NewDate(1925, 1, 1)),
+		NewConstant(types.Dat(1925, 1, 1)),
 	)
 	if err != nil {
 		t.Fatalf("NewBinaryOperation returned error: %v", err)
@@ -38,8 +38,8 @@ func TestSelect(t *testing.T) {
 	want := &types.Relation{
 		Schema: sampleData.Films.Schema,
 		Rows: [][]types.Value{
-			{types.NewDecimal("2"), types.NewText("The Kid"), types.NewDate(1921, 1, 21), types.NewDecimal("2")},
-			{types.NewDecimal("3"), types.NewText("Sherlock Jr."), types.NewDate(1924, 4, 21), types.NewDecimal("1")},
+			{types.Dec("2"), types.Txt("The Kid"), types.Dat(1921, 1, 21), types.Dec("2")},
+			{types.Dec("3"), types.Txt("Sherlock Jr."), types.Dat(1924, 4, 21), types.Dec("1")},
 		},
 	}
 	if !reflect.DeepEqual(got, want) {
@@ -51,15 +51,15 @@ func TestProject(t *testing.T) {
 	want := &types.Relation{
 		Schema: types.TableSchema{
 			Columns: []types.ColumnSchema{
-				types.ColumnSchema{"films.name", types.TypeText},
-				types.ColumnSchema{"c1", types.TypeDecimal},
-				types.ColumnSchema{"c2", types.TypeBoolean},
+				types.ColumnSchema{"films.name", types.TypeText, false},
+				types.ColumnSchema{"c1", types.TypeDecimal, false},
+				types.ColumnSchema{"c2", types.TypeBoolean, false},
 			},
 		},
 		Rows: [][]types.Value{
-			{types.NewText("The General"), types.NewDecimal("123"), types.NewBoolean(false)},
-			{types.NewText("The Kid"), types.NewDecimal("123"), types.NewBoolean(true)},
-			{types.NewText("Sherlock Jr."), types.NewDecimal("123"), types.NewBoolean(true)},
+			{types.Txt("The General"), types.Dec("123"), types.Boo(false)},
+			{types.Txt("The Kid"), types.Dec("123"), types.Boo(true)},
+			{types.Txt("Sherlock Jr."), types.Dec("123"), types.Boo(true)},
 		},
 	}
 
@@ -68,14 +68,14 @@ func TestProject(t *testing.T) {
 	comparison, err := NewBinaryOperation(
 		NewColumnReference(2, types.TypeDate), // release_date
 		BinaryOperatorLt,
-		NewConstant(types.NewDate(1925, 1, 1)),
+		NewConstant(types.Dat(1925, 1, 1)),
 	)
 	if err != nil {
 		t.Fatalf("NewBinaryOperation returned error: %v", err)
 	}
 	columns := []OutputColumn{
 		OutputColumn{"films.name", NewColumnReference(1, types.TypeText)},
-		OutputColumn{"c1", NewConstant(types.NewDecimal("123"))},
+		OutputColumn{"c1", NewConstant(types.Dec("123"))},
 		OutputColumn{"c2", comparison},
 	}
 	p, err := NewProject(l, columns)
@@ -93,18 +93,18 @@ func TestJoin(t *testing.T) {
 
 	wantSchema := types.TableSchema{
 		Columns: []types.ColumnSchema{
-			types.ColumnSchema{"films.id", types.TypeDecimal},
-			types.ColumnSchema{"films.name", types.TypeText},
-			types.ColumnSchema{"films.release_date", types.TypeDate},
-			types.ColumnSchema{"films.director", types.TypeDecimal},
-			types.ColumnSchema{"people.id", types.TypeDecimal},
-			types.ColumnSchema{"people.name", types.TypeText},
+			types.ColumnSchema{"films.id", types.TypeDecimal, false},
+			types.ColumnSchema{"films.name", types.TypeText, false},
+			types.ColumnSchema{"films.release_date", types.TypeDate, false},
+			types.ColumnSchema{"films.director", types.TypeDecimal, false},
+			types.ColumnSchema{"people.id", types.TypeDecimal, false},
+			types.ColumnSchema{"people.name", types.TypeText, false},
 		},
 	}
 	wantRows := [][]types.Value{
-		{types.NewDecimal("1"), types.NewText("The General"), types.NewDate(1926, 12, 31), types.NewDecimal("1"), types.NewDecimal("1"), types.NewText("Buster Keaton")},
-		{types.NewDecimal("2"), types.NewText("The Kid"), types.NewDate(1921, 1, 21), types.NewDecimal("2"), types.NewDecimal("2"), types.NewText("Charlie Chaplin")},
-		{types.NewDecimal("3"), types.NewText("Sherlock Jr."), types.NewDate(1924, 4, 21), types.NewDecimal("1"), types.NewDecimal("1"), types.NewText("Buster Keaton")},
+		{types.Dec("1"), types.Txt("The General"), types.Dat(1926, 12, 31), types.Dec("1"), types.Dec("1"), types.Txt("Buster Keaton")},
+		{types.Dec("2"), types.Txt("The Kid"), types.Dat(1921, 1, 21), types.Dec("2"), types.Dec("2"), types.Txt("Charlie Chaplin")},
+		{types.Dec("3"), types.Txt("Sherlock Jr."), types.Dat(1924, 4, 21), types.Dec("1"), types.Dec("1"), types.Txt("Buster Keaton")},
 	}
 	want := &types.Relation{
 		Schema: wantSchema,

@@ -16,14 +16,14 @@ func TestAll(t *testing.T) {
 	want := &types.Relation{
 		Schema: types.TableSchema{
 			Columns: []types.ColumnSchema{
-				{"films.name", types.TypeText},
-				{"people.name", types.TypeText},
+				{"films.name", types.TypeText, false},
+				{"people.name", types.TypeText, false},
 			},
 		},
 		Rows: [][]types.Value{
-			[]types.Value{types.NewText("The General"), types.NewText("Buster Keaton")},
-			[]types.Value{types.NewText("The Kid"), types.NewText("Charlie Chaplin")},
-			[]types.Value{types.NewText("Sherlock Jr."), types.NewText("Buster Keaton")},
+			[]types.Value{types.Txt("The General"), types.Txt("Buster Keaton")},
+			[]types.Value{types.Txt("The Kid"), types.Txt("Charlie Chaplin")},
+			[]types.Value{types.Txt("Sherlock Jr."), types.Txt("Buster Keaton")},
 		},
 	}
 

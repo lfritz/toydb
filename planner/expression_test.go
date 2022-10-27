@@ -21,17 +21,17 @@ func TestConvertExpressionValid(t *testing.T) {
 	}{
 		{
 			sql.String{"hello"},
-			query.NewConstant(types.NewText("hello")),
+			query.NewConstant(types.Txt("hello")),
 			"",
 		},
 		{
 			sql.Boolean{true},
-			query.NewConstant(types.NewBoolean(true)),
+			query.NewConstant(types.Boo(true)),
 			"",
 		},
 		{
 			sql.Number{types.NewDecimal("123")},
-			query.NewConstant(types.NewDecimal("123")),
+			query.NewConstant(types.Dec("123")),
 			"",
 		},
 		{
@@ -46,7 +46,7 @@ func TestConvertExpressionValid(t *testing.T) {
 				sql.ColumnReference{"films", "id"},
 			},
 			&query.BinaryOperation{
-				query.NewConstant(types.NewDecimal("4")),
+				query.NewConstant(types.Dec("4")),
 				query.BinaryOperatorEq,
 				query.NewColumnReference(0, types.TypeDecimal),
 			},
@@ -93,9 +93,9 @@ func TestConvertExpressionInvalid(t *testing.T) {
 func TestFindColumn(t *testing.T) {
 	schema := types.TableSchema{
 		Columns: []types.ColumnSchema{
-			types.ColumnSchema{"films.name", types.TypeText},
-			types.ColumnSchema{"films.release_date", types.TypeDate},
-			types.ColumnSchema{"people.name", types.TypeText},
+			types.ColumnSchema{"films.name", types.TypeText, false},
+			types.ColumnSchema{"films.release_date", types.TypeDate, false},
+			types.ColumnSchema{"people.name", types.TypeText, false},
 		},
 	}
 

@@ -21,7 +21,7 @@ func (b Boolean) Bool() bool {
 }
 
 // Compare compares b to v, with true > false.
-func (b Boolean) Compare(v Value) Compared {
+func (b Boolean) Compare(v BasicValue) Compared {
 	c, ok := v.(Boolean)
 	if !ok {
 		return ComparedInvalid

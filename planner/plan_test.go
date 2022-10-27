@@ -63,7 +63,7 @@ func TestPlanValid(t *testing.T) {
 					Condition: &query.BinaryOperation{
 						&query.ColumnReference{1, types.TypeText},
 						query.BinaryOperatorEq,
-						query.NewConstant(types.NewText("The General")),
+						query.NewConstant(types.Txt("The General")),
 					},
 				},
 				Columns: []query.OutputColumn{

@@ -10,16 +10,16 @@ type SampleData struct {
 func GetSampleData() *SampleData {
 	filmsSchema := types.TableSchema{
 		Columns: []types.ColumnSchema{
-			types.ColumnSchema{"id", types.TypeDecimal},
-			types.ColumnSchema{"name", types.TypeText},
-			types.ColumnSchema{"release_date", types.TypeDate},
-			types.ColumnSchema{"director", types.TypeDecimal},
+			types.ColumnSchema{"id", types.TypeDecimal, false},
+			types.ColumnSchema{"name", types.TypeText, false},
+			types.ColumnSchema{"release_date", types.TypeDate, false},
+			types.ColumnSchema{"director", types.TypeDecimal, false},
 		},
 	}
 	filmsRows := [][]types.Value{
-		{types.NewDecimal("1"), types.NewText("The General"), types.NewDate(1926, 12, 31), types.NewDecimal("1")},
-		{types.NewDecimal("2"), types.NewText("The Kid"), types.NewDate(1921, 1, 21), types.NewDecimal("2")},
-		{types.NewDecimal("3"), types.NewText("Sherlock Jr."), types.NewDate(1924, 4, 21), types.NewDecimal("1")},
+		{types.Dec("1"), types.Txt("The General"), types.Dat(1926, 12, 31), types.Dec("1")},
+		{types.Dec("2"), types.Txt("The Kid"), types.Dat(1921, 1, 21), types.Dec("2")},
+		{types.Dec("3"), types.Txt("Sherlock Jr."), types.Dat(1924, 4, 21), types.Dec("1")},
 	}
 	films := &types.Relation{
 		Schema: filmsSchema,
@@ -28,13 +28,13 @@ func GetSampleData() *SampleData {
 
 	peopleSchema := types.TableSchema{
 		Columns: []types.ColumnSchema{
-			types.ColumnSchema{"id", types.TypeDecimal},
-			types.ColumnSchema{"name", types.TypeText},
+			types.ColumnSchema{"id", types.TypeDecimal, false},
+			types.ColumnSchema{"name", types.TypeText, false},
 		},
 	}
 	peopleRows := [][]types.Value{
-		{types.NewDecimal("1"), types.NewText("Buster Keaton")},
-		{types.NewDecimal("2"), types.NewText("Charlie Chaplin")},
+		{types.Dec("1"), types.Txt("Buster Keaton")},
+		{types.Dec("2"), types.Txt("Charlie Chaplin")},
 	}
 	people := &types.Relation{
 		Schema: peopleSchema,

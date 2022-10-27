@@ -69,7 +69,7 @@ func (d Decimal) Type() Type {
 }
 
 // Compare compares d to v.
-func (d Decimal) Compare(v Value) Compared {
+func (d Decimal) Compare(v BasicValue) Compared {
 	e, ok := v.(Decimal)
 	if !ok {
 		return ComparedInvalid

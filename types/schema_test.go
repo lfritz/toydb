@@ -3,8 +3,8 @@ package types
 import "testing"
 
 func TestColumnSchemaString(t *testing.T) {
-	schema := ColumnSchema{"name", TypeText}
-	want := "name text"
+	schema := ColumnSchema{"name", TypeText, false}
+	want := "name text not null"
 	got := schema.String()
 	if got != want {
 		t.Errorf("schema.String() == %q, want %q", got, want)
@@ -14,11 +14,11 @@ func TestColumnSchemaString(t *testing.T) {
 func TestTableSchema(t *testing.T) {
 	schema := TableSchema{
 		Columns: []ColumnSchema{
-			ColumnSchema{"id", TypeDecimal},
-			ColumnSchema{"name", TypeText},
+			ColumnSchema{"id", TypeDecimal, false},
+			ColumnSchema{"name", TypeText, true},
 		},
 	}
-	want := "TableSchema(id decimal, name text)"
+	want := "TableSchema(id decimal not null, name text null)"
 	got := schema.String()
 	if got != want {
 		t.Errorf("schema.String() == %q, want %q", got, want)

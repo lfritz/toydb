@@ -24,12 +24,12 @@ func sampleSchema() types.TableSchema {
 func sampleRow() *types.Row {
 	return &types.Row{
 		Schema: sampleSchema(),
-		Values: []types.Value{types.NewBoolean(false), types.NewText("hello")},
+		Values: []types.Value{types.Boo(false), types.Txt("hello")},
 	}
 }
 
 func TestConstantType(t *testing.T) {
-	c := NewConstant(types.NewDecimal("123"))
+	c := NewConstant(types.Dec("123"))
 	got := c.Type()
 	want := types.TypeDecimal
 	if got != want {
@@ -38,7 +38,7 @@ func TestConstantType(t *testing.T) {
 }
 
 func TestConstantEvaluate(t *testing.T) {
-	value := types.NewDecimal("123")
+	value := types.Dec("123")
 	got := NewConstant(value).Evaluate(sampleRow())
 	if got.Compare(value) != types.ComparedEq {
 		t.Errorf("Evaluate returned %v, want %v", got, value)
@@ -79,15 +79,15 @@ func TestColumnReferenceCheck(t *testing.T) {
 func TestColumnReferenceEvaluate(t *testing.T) {
 	c := NewColumnReference(1, types.TypeText)
 	got := c.Evaluate(sampleRow())
-	want := types.NewText("hello")
+	want := types.Txt("hello")
 	if got.Compare(want) != types.ComparedEq {
 		t.Errorf("Evaluate returned %v, want %v", got, want)
 	}
 }
 
 func binaryOperation(t *testing.T, left, right string, op BinaryOperator) *BinaryOperation {
-	l := NewConstant(types.NewDecimal(left))
-	r := NewConstant(types.NewDecimal(right))
+	l := NewConstant(types.Dec(left))
+	r := NewConstant(types.Dec(right))
 	expression, err := NewBinaryOperation(l, op, r)
 	if err != nil {
 		t.Fatalf("NewBinaryOperation(%v, %v, %v) returned error: %v", l, op, r, err)
@@ -121,15 +121,15 @@ func TestBinaryOperationEvaluate(t *testing.T) {
 	row := sampleRow()
 	for _, c := range cases {
 		expression := binaryOperation(t, c.left, c.right, c.op)
-		want := types.NewBoolean(c.want)
+		want := types.Boo(c.want)
 		got := expression.Evaluate(row)
 		if got.Compare(want) != types.ComparedEq {
 			t.Errorf("Evaluate returned %v, want %v", got, c.want)
 		}
 	}
 
-	left := NewConstant(types.NewDecimal("133"))
-	right := NewConstant(types.NewBoolean(false))
+	left := NewConstant(types.Dec("133"))
+	right := NewConstant(types.Boo(false))
 	op := BinaryOperatorEq
 	_, err := NewBinaryOperation(left, op, right)
 	if err == nil {
@@ -138,7 +138,7 @@ func TestBinaryOperationEvaluate(t *testing.T) {
 }
 
 func TestExpressionString(t *testing.T) {
-	constant := NewConstant(types.NewDecimal("123"))
+	constant := NewConstant(types.Dec("123"))
 	columnReference := NewColumnReference(1, types.TypeDecimal)
 	binaryOperation, err := NewBinaryOperation(constant, BinaryOperatorEq, columnReference)
 	if err != nil {

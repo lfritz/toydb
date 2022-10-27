@@ -47,7 +47,7 @@ func leapYear(year int) bool {
 }
 
 // Compare compares d to v.
-func (d Date) Compare(v Value) Compared {
+func (d Date) Compare(v BasicValue) Compared {
 	e, ok := v.(Date)
 	if !ok {
 		return ComparedInvalid

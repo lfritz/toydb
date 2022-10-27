@@ -120,7 +120,7 @@ func (o *BinaryOperation) Evaluate(r *types.Row) types.Value {
 	default: // ComparedInvalid
 		panic("comparison returned ComparedInvalid")
 	}
-	return types.NewBoolean(result)
+	return types.NewValue(types.NewBoolean(result))
 }
 
 func (o *BinaryOperation) String() string {

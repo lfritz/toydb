@@ -17,7 +17,7 @@ func (t Text) Type() Type {
 }
 
 // Compare compares t to v.
-func (t Text) Compare(v Value) Compared {
+func (t Text) Compare(v BasicValue) Compared {
 	u, ok := v.(Text)
 	if !ok {
 		return ComparedInvalid

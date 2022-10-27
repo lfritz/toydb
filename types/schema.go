@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -52,15 +53,23 @@ func (s TableSchema) String() string {
 type ColumnSchema struct {
 	Name string
 	Type Type
+	Null bool
 }
 
 func (s ColumnSchema) Check(value Value) error {
-	if s.Type != value.Type() {
+	if value.Type() != s.Type {
 		return fmt.Errorf("wrong type: expected %v, got %v", s.Type, value.Type())
+	}
+	if value.Null() && !s.Null {
+		return errors.New("value cannot be null")
 	}
 	return nil
 }
 
 func (s ColumnSchema) String() string {
-	return fmt.Sprintf("%s %s", s.Name, s.Type)
+	if s.Null {
+		return fmt.Sprintf("%s %s null", s.Name, s.Type)
+	} else {
+		return fmt.Sprintf("%s %s not null", s.Name, s.Type)
+	}
 }

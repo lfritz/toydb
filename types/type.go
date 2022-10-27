@@ -25,10 +25,3 @@ func (t Type) String() string {
 	}
 	panic(fmt.Sprintf("unexpected Type: %d", t))
 }
-
-// The Value interface is implemented by all value types supported by the database.
-type Value interface {
-	Type() Type
-	Compare(v Value) Compared
-	String() string
-}

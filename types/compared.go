@@ -4,9 +4,10 @@ package types
 type Compared int
 
 const (
-	ComparedLt Compared = -1
-	ComparedEq Compared = 0
-	ComparedGt Compared = 1
+	ComparedLt Compared = iota
+	ComparedEq
+	ComparedGt
+	ComparedNull
 	ComparedInvalid
 )
 
@@ -18,6 +19,8 @@ func (c Compared) String() string {
 		return "eq"
 	case ComparedGt:
 		return "gt"
+	case ComparedNull:
+		return "null"
 	}
 	return "invalid"
 }

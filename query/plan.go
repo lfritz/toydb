@@ -78,8 +78,8 @@ func (s *Select) Run(db *storage.Database) *types.Relation {
 	var rows [][]types.Value
 	for i := range from.Rows {
 		row := from.Row(i)
-		got := s.Condition.Evaluate(row).(types.Boolean)
-		if got.Bool() {
+		got := s.Condition.Evaluate(row)
+		if got.IsTrue() {
 			rows = append(rows, row.Values)
 		}
 	}
@@ -263,8 +263,8 @@ func (j *Join) Run(db *storage.Database) *types.Relation {
 				Schema: schema,
 				Values: combineRow(l, r),
 			}
-			got := j.Condition.Evaluate(row).(types.Boolean)
-			if got.Bool() {
+			got := j.Condition.Evaluate(row)
+			if got.IsTrue() {
 				rows = append(rows, row.Values)
 			}
 		}
