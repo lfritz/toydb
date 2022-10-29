@@ -71,5 +71,5 @@ func (d Date) Compare(v BasicValue) Compared {
 }
 
 func (d Date) String() string {
-	return fmt.Sprintf("%4d-%2d-%2d", d.year, d.month, d.day)
+	return fmt.Sprintf("%04d-%02d-%02d", d.year, d.month, d.day)
 }
