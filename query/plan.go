@@ -294,7 +294,33 @@ func (j *Join) Run(db *storage.Database) *types.Relation {
 				rows = append(rows, row)
 			}
 		}
-		// TODO right outer join
+	case JoinTypeRightOuter:
+		for _, r := range right.Rows {
+			found := false
+			for _, l := range left.Rows {
+				row := &types.Row{
+					Schema: schema,
+					Values: combineRow(l, r),
+				}
+				got := j.Condition.Evaluate(row)
+				if got.IsTrue() {
+					rows = append(rows, row.Values)
+					found = true
+				}
+			}
+			if !found {
+				leftColumns := len(left.Schema.Columns)
+				rightColumns := len(right.Schema.Columns)
+				row := make([]types.Value, leftColumns+rightColumns)
+				for i, columnSchema := range left.Schema.Columns {
+					row[i] = types.NewNull(columnSchema.Type)
+				}
+				for i, value := range r {
+					row[leftColumns+i] = value
+				}
+				rows = append(rows, row)
+			}
+		}
 	}
 
 	return &types.Relation{

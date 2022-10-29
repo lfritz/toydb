@@ -187,4 +187,53 @@ func TestLeftOuterJoin(t *testing.T) {
 	}
 }
 
-// TODO test right outer join
+func TestRightOuterJoin(t *testing.T) {
+	sampleData := storage.GetSampleData()
+
+	wantSchema := types.TableSchema{
+		Columns: []types.ColumnSchema{
+			types.ColumnSchema{"films.id", types.TypeDecimal, true},
+			types.ColumnSchema{"films.name", types.TypeText, true},
+			types.ColumnSchema{"films.release_date", types.TypeDate, true},
+			types.ColumnSchema{"films.director", types.TypeDecimal, true},
+			types.ColumnSchema{"people.id", types.TypeDecimal, false},
+			types.ColumnSchema{"people.name", types.TypeText, false},
+		},
+	}
+	wantRows := [][]types.Value{
+		{types.Dec("1"), types.Txt("The General"), types.Dat(1926, 12, 31), types.Dec("1"), types.Dec("1"), types.Txt("Buster Keaton")},
+		{types.Dec("3"), types.Txt("Sherlock Jr."), types.Dat(1924, 4, 21), types.Dec("1"), types.Dec("1"), types.Txt("Buster Keaton")},
+		{types.Dec("2"), types.Txt("The Kid"), types.Dat(1921, 1, 21), types.Dec("2"), types.Dec("2"), types.Txt("Charlie Chaplin")},
+		{types.NewNull(types.TypeDecimal), types.NewNull(types.TypeText), types.NewNull(types.TypeDate), types.NewNull(types.TypeDecimal), types.Dec("3"), types.Txt("Harold Lloyd")},
+	}
+	want := &types.Relation{
+		Schema: wantSchema,
+		Rows:   wantRows,
+	}
+
+	// this is the same query as TestLeftOuterJoin, with the order of the tables reversed
+	left := NewLoad("films", sampleData.Films.Schema)
+	right := NewLoad("people", sampleData.People.Schema)
+	condition, err := NewBinaryOperation(
+		NewColumnReference(3, types.TypeDecimal),
+		BinaryOperatorEq,
+		NewColumnReference(4, types.TypeDecimal),
+	)
+	if err != nil {
+		t.Fatalf("NewBinaryOperation returned error: %v", err)
+	}
+	join, err := NewJoin(JoinTypeRightOuter, left, right, condition)
+	if err != nil {
+		t.Fatalf("NewJoin returned error: %v", err)
+	}
+
+	gotSchema := join.Schema()
+	if !reflect.DeepEqual(gotSchema, wantSchema) {
+		t.Errorf("Schema returned %v, want %v", gotSchema, wantSchema)
+	}
+
+	got := join.Run(sampleData.Database)
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Run returned %v, want %v", got, want)
+	}
+}
