@@ -88,7 +88,7 @@ func TestProject(t *testing.T) {
 	}
 }
 
-func TestJoin(t *testing.T) {
+func TestInnerJoin(t *testing.T) {
 	sampleData := storage.GetSampleData()
 
 	wantSchema := types.TableSchema{
@@ -136,3 +136,55 @@ func TestJoin(t *testing.T) {
 		t.Errorf("Run returned %v, want %v", got, want)
 	}
 }
+
+func TestLeftOuterJoin(t *testing.T) {
+	sampleData := storage.GetSampleData()
+
+	wantSchema := types.TableSchema{
+		Columns: []types.ColumnSchema{
+			types.ColumnSchema{"people.id", types.TypeDecimal, false},
+			types.ColumnSchema{"people.name", types.TypeText, false},
+			types.ColumnSchema{"films.id", types.TypeDecimal, true},
+			types.ColumnSchema{"films.name", types.TypeText, true},
+			types.ColumnSchema{"films.release_date", types.TypeDate, true},
+			types.ColumnSchema{"films.director", types.TypeDecimal, true},
+		},
+	}
+	wantRows := [][]types.Value{
+		{types.Dec("1"), types.Txt("Buster Keaton"), types.Dec("1"), types.Txt("The General"), types.Dat(1926, 12, 31), types.Dec("1")},
+		{types.Dec("1"), types.Txt("Buster Keaton"), types.Dec("3"), types.Txt("Sherlock Jr."), types.Dat(1924, 4, 21), types.Dec("1")},
+		{types.Dec("2"), types.Txt("Charlie Chaplin"), types.Dec("2"), types.Txt("The Kid"), types.Dat(1921, 1, 21), types.Dec("2")},
+		{types.Dec("3"), types.Txt("Harold Lloyd"), types.NewNull(types.TypeDecimal), types.NewNull(types.TypeText), types.NewNull(types.TypeDate), types.NewNull(types.TypeDecimal)},
+	}
+	want := &types.Relation{
+		Schema: wantSchema,
+		Rows:   wantRows,
+	}
+
+	left := NewLoad("people", sampleData.People.Schema)
+	right := NewLoad("films", sampleData.Films.Schema)
+	condition, err := NewBinaryOperation(
+		NewColumnReference(0, types.TypeDecimal),
+		BinaryOperatorEq,
+		NewColumnReference(5, types.TypeDecimal),
+	)
+	if err != nil {
+		t.Fatalf("NewBinaryOperation returned error: %v", err)
+	}
+	join, err := NewJoin(JoinTypeLeftOuter, left, right, condition)
+	if err != nil {
+		t.Fatalf("NewJoin returned error: %v", err)
+	}
+
+	gotSchema := join.Schema()
+	if !reflect.DeepEqual(gotSchema, wantSchema) {
+		t.Errorf("Schema returned %v, want %v", gotSchema, wantSchema)
+	}
+
+	got := join.Run(sampleData.Database)
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Run returned %v, want %v", got, want)
+	}
+}
+
+// TODO test right outer join

@@ -35,6 +35,7 @@ func GetSampleData() *SampleData {
 	peopleRows := [][]types.Value{
 		{types.Dec("1"), types.Txt("Buster Keaton")},
 		{types.Dec("2"), types.Txt("Charlie Chaplin")},
+		{types.Dec("3"), types.Txt("Harold Lloyd")},
 	}
 	people := &types.Relation{
 		Schema: peopleSchema,

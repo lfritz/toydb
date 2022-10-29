@@ -1,7 +1,6 @@
 package query
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/lfritz/toydb/storage"
@@ -225,14 +224,13 @@ type Join struct {
 }
 
 func NewJoin(t JoinType, left, right Plan, condition Expression) (*Join, error) {
-	if t != JoinTypeInner {
-		return nil, errors.New("only inner joins are supported for now")
-	}
 	if condition.Type() != types.TypeBoolean {
 		return nil, fmt.Errorf("invalid join condition: %v", condition)
 	}
 
-	combinedSchema := CombineSchemas(left.Schema(), right.Schema())
+	makeLeftNull := t == JoinTypeRightOuter
+	makeRightNull := t == JoinTypeLeftOuter
+	combinedSchema := CombineSchemas(left.Schema(), right.Schema(), makeLeftNull, makeRightNull)
 	if err := condition.Check(combinedSchema); err != nil {
 		return nil, err
 	}
@@ -257,17 +255,48 @@ func (j *Join) Run(db *storage.Database) *types.Relation {
 	schema := j.Schema()
 
 	var rows [][]types.Value
-	for _, l := range left.Rows {
-		for _, r := range right.Rows {
-			row := &types.Row{
-				Schema: schema,
-				Values: combineRow(l, r),
-			}
-			got := j.Condition.Evaluate(row)
-			if got.IsTrue() {
-				rows = append(rows, row.Values)
+	switch j.Type {
+	case JoinTypeInner:
+		for _, l := range left.Rows {
+			for _, r := range right.Rows {
+				row := &types.Row{
+					Schema: schema,
+					Values: combineRow(l, r),
+				}
+				got := j.Condition.Evaluate(row)
+				if got.IsTrue() {
+					rows = append(rows, row.Values)
+				}
 			}
 		}
+	case JoinTypeLeftOuter:
+		for _, l := range left.Rows {
+			found := false
+			for _, r := range right.Rows {
+				row := &types.Row{
+					Schema: schema,
+					Values: combineRow(l, r),
+				}
+				got := j.Condition.Evaluate(row)
+				if got.IsTrue() {
+					rows = append(rows, row.Values)
+					found = true
+				}
+			}
+			if !found {
+				leftColumns := len(left.Schema.Columns)
+				rightColumns := len(right.Schema.Columns)
+				row := make([]types.Value, leftColumns+rightColumns)
+				for i, value := range l {
+					row[i] = value
+				}
+				for i, columnSchema := range right.Schema.Columns {
+					row[leftColumns+i] = types.NewNull(columnSchema.Type)
+				}
+				rows = append(rows, row)
+			}
+		}
+		// TODO right outer join
 	}
 
 	return &types.Relation{
@@ -289,11 +318,23 @@ func (j *Join) Print(printer *Printer) {
 	printer.Println("}")
 }
 
-func CombineSchemas(a, b types.TableSchema) types.TableSchema {
+func CombineSchemas(a, b types.TableSchema, makeANull, makeBNull bool) types.TableSchema {
 	var columns []types.ColumnSchema
-	columns = append(columns, a.Columns...)
-	columns = append(columns, b.Columns...)
+	columns = appendColumns(columns, a.Columns, makeANull)
+	columns = appendColumns(columns, b.Columns, makeBNull)
 	return types.TableSchema{Columns: columns}
+}
+
+func appendColumns(slice, elems []types.ColumnSchema, makeNull bool) []types.ColumnSchema {
+	if makeNull {
+		for _, e := range elems {
+			e.Null = true
+			slice = append(slice, e)
+		}
+	} else {
+		slice = append(slice, elems...)
+	}
+	return slice
 }
 
 func combineRow(a, b []types.Value) []types.Value {
