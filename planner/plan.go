@@ -73,7 +73,7 @@ func convertTableReference(ref sql.TableReference, db *storage.Database) (query.
 		if err != nil {
 			return nil, err
 		}
-		schema := query.CombineSchemas(left.Schema(), right.Schema())
+		schema := query.CombineSchemas(left.Schema(), right.Schema(), joinType)
 		condition, _, err := ConvertExpression(f.Condition, schema)
 		if err != nil {
 			return nil, err
