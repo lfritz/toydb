@@ -35,6 +35,11 @@ func TestConvertExpressionValid(t *testing.T) {
 			"",
 		},
 		{
+			sql.Date{types.NewDate(1999, 12, 31)},
+			query.NewConstant(types.Dat(1999, 12, 31)),
+			"",
+		},
+		{
 			sql.ColumnReference{"films", "name"},
 			query.NewColumnReference(1, types.TypeText),
 			"films.name",

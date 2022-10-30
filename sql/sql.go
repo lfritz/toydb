@@ -150,6 +150,15 @@ func (n Number) String() string {
 	return fmt.Sprintf("Number(%v)", n.Value)
 }
 
+// A Date is an SQL date literal.
+type Date struct {
+	Value types.Date
+}
+
+func (d Date) String() string {
+	return fmt.Sprintf("Date(%v)", d.Value)
+}
+
 // A BinaryOperation is an expression with a binary operator, for example "1 + 2" or "foo = 'bar'".
 type BinaryOperation struct {
 	Left     Expression

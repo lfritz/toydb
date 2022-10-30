@@ -34,6 +34,10 @@ func TestLexerValid(t *testing.T) {
 			`select star from (identifier "foo") where (identifier "x") is not null`,
 		},
 		{
+			"select * from foo where x > date '1999-12-31'",
+			`select star from (identifier "foo") where (identifier "x") gt date (string "1999-12-31")`,
+		},
+		{
 			"select foo from bar where x != 'hello' or y <> 'ciao'",
 			`select (identifier "foo") from (identifier "bar") where (identifier "x") ne (string "hello") or (identifier "y") ne (string "ciao")`,
 		},

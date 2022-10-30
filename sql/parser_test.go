@@ -233,6 +233,7 @@ func TestParseValue(t *testing.T) {
 		{"true", Boolean{Value: true}},
 		{"foo", ColumnReference{Name: "foo"}},
 		{"foo.bar", ColumnReference{Relation: "foo", Name: "bar"}},
+		{"date '1999-12-31'", Date{Value: types.NewDate(1999, 12, 31)}},
 	}
 	for _, c := range cases {
 		checkParser(t, "ParseValue", ParseValue, c.input, c.want)

@@ -19,6 +19,8 @@ func ConvertExpression(input sql.Expression, schema types.TableSchema) (query.Ex
 		return query.NewConstant(types.NewValue(types.NewBoolean(e.Value))), "", nil
 	case sql.Number:
 		return query.NewConstant(types.NewValue(e.Value)), "", nil
+	case sql.Date:
+		return query.NewConstant(types.NewValue(e.Value)), "", nil
 	case *sql.BinaryOperation:
 		return convertBinaryOperation(e, schema)
 	}

@@ -1,6 +1,10 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+	"regexp"
+	"strconv"
+)
 
 // Date represents a Gregorian calendar date between year 1 and year 9999.
 type Date struct {
@@ -22,6 +26,24 @@ func CheckDate(year, month, day int) (date Date, ok bool) {
 		return Date{}, false
 	}
 	return Date{year, month, day}, true
+}
+
+var dateRe = regexp.MustCompile(`^(\d\d\d\d)-(\d\d)-(\d\d)$`)
+
+// ParseDate parses the input and returns an error if it's not a valid date.
+func ParseDate(input string) (Date, error) {
+	match := dateRe.FindStringSubmatch(input)
+	if match == nil {
+		return Date{}, fmt.Errorf("invalid date format: %q", input)
+	}
+	year, _ := strconv.Atoi(match[1])
+	month, _ := strconv.Atoi(match[2])
+	day, _ := strconv.Atoi(match[3])
+	date, ok := CheckDate(year, month, day)
+	if !ok {
+		return Date{}, fmt.Errorf("invalid date: %q", input)
+	}
+	return date, nil
 }
 
 func (d Date) Type() Type {

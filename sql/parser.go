@@ -1,6 +1,10 @@
 package sql
 
-import "github.com/lfritz/toydb/types"
+import (
+	"regexp"
+
+	"github.com/lfritz/toydb/types"
+)
 
 // Parse parses a select statement with optional semicolon at the end.
 func Parse(input string) (*SelectStatement, error) {
@@ -193,7 +197,12 @@ var tokenToOperator = map[TokenType]BinaryOperator{
 
 func ParseValue(tokens *TokenList) (Expression, *TokenList, error) {
 	token, err := tokens.Peek(
-		TokenTypeString, TokenTypeNumber, TokenTypeIdentifier, TokenTypeFalse, TokenTypeTrue,
+		TokenTypeString,
+		TokenTypeNumber,
+		TokenTypeIdentifier,
+		TokenTypeFalse,
+		TokenTypeTrue,
+		TokenTypeDate,
 	)
 	if err != nil {
 		return nil, nil, err
@@ -206,6 +215,9 @@ func ParseValue(tokens *TokenList) (Expression, *TokenList, error) {
 	case TokenTypeFalse, TokenTypeTrue:
 		tokens.Consume()
 		return Boolean{token.Type == TokenTypeTrue}, tokens, nil
+	case TokenTypeDate:
+		tokens.Consume()
+		return ParseDate(tokens)
 	default:
 		return ParseColumnReference(tokens)
 	}
@@ -229,6 +241,20 @@ func ParseNumber(tokens *TokenList) (Expression, *TokenList, error) {
 		return nil, nil, SyntaxError{token.From, err.Error()}
 	}
 	return Number{decimal}, tokens, nil
+}
+
+var dateRe = regexp.MustCompile(`^(\d\d)-(\d\d)-(\d\d\d\d)$`)
+
+func ParseDate(tokens *TokenList) (Expression, *TokenList, error) {
+	token, err := tokens.Get(TokenTypeString)
+	if err != nil {
+		return nil, nil, err
+	}
+	date, err := types.ParseDate(token.Text)
+	if err != nil {
+		return nil, nil, SyntaxError{token.From, err.Error()}
+	}
+	return Date{date}, tokens, nil
 }
 
 func ParseColumnReference(tokens *TokenList) (Expression, *TokenList, error) {

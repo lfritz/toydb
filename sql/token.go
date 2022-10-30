@@ -44,6 +44,7 @@ const (
 	TokenTypeOn
 	TokenTypeFalse
 	TokenTypeTrue
+	TokenTypeDate
 )
 
 var tokenTypeNames = map[TokenType]string{
@@ -77,6 +78,7 @@ var tokenTypeNames = map[TokenType]string{
 	TokenTypeOn:         "on",
 	TokenTypeFalse:      "false",
 	TokenTypeTrue:       "true",
+	TokenTypeDate:       "date",
 }
 
 func (t TokenType) String() string {
@@ -102,6 +104,7 @@ var keywordMap = map[string]TokenType{
 	"on":     TokenTypeOn,
 	"false":  TokenTypeFalse,
 	"true":   TokenTypeTrue,
+	"date":   TokenTypeDate,
 }
 
 var punctuationMap = map[string]TokenType{

@@ -12,7 +12,11 @@ import (
 
 func TestAll(t *testing.T) {
 	sampleData := storage.GetSampleData()
-	query := `select films.name, people.name from films join people on films.director = people.id`
+	query := `
+select films.name, people.name
+from films
+join people on films.director = people.id
+where films.release_date > date '1924-01-01'`
 	want := &types.Relation{
 		Schema: types.TableSchema{
 			Columns: []types.ColumnSchema{
@@ -22,7 +26,6 @@ func TestAll(t *testing.T) {
 		},
 		Rows: [][]types.Value{
 			[]types.Value{types.Txt("The General"), types.Txt("Buster Keaton")},
-			[]types.Value{types.Txt("The Kid"), types.Txt("Charlie Chaplin")},
 			[]types.Value{types.Txt("Sherlock Jr."), types.Txt("Buster Keaton")},
 		},
 	}

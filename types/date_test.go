@@ -41,6 +41,31 @@ func TestCheckDateInvalid(t *testing.T) {
 	}
 }
 
+func TestParseDate(t *testing.T) {
+	input := "1999-12-31"
+	got, err := ParseDate(input)
+	if err != nil {
+		t.Errorf("ParseDate(%q) returned error: %v", input, err)
+	}
+	want := NewDate(1999, 12, 31)
+	if got != want {
+		t.Errorf("ParseDate(%q) returned %v, want %v", input, got, want)
+	}
+
+	invalid := []string{
+		"1999-12-1",
+		"1999-12-31 ",
+		" 1999-12-31",
+		"1999-12-32",
+	}
+	for _, input := range invalid {
+		_, err := ParseDate(input)
+		if err == nil {
+			t.Errorf("ParseDate(%q) did not return error", input)
+		}
+	}
+}
+
 func TestDaysInMonth(t *testing.T) {
 	cases := []struct {
 		year, month int
