@@ -57,6 +57,17 @@ func TestConvertExpressionValid(t *testing.T) {
 			},
 			"",
 		},
+		{
+			&sql.UnaryOperation{
+				sql.Number{types.NewDecimal("4")},
+				sql.UnaryOperatorIsNull,
+			},
+			&query.UnaryOperation{
+				query.NewConstant(types.Dec("4")),
+				query.UnaryOperatorIsNull,
+			},
+			"",
+		},
 	}
 
 	for _, c := range cases {

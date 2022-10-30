@@ -23,6 +23,8 @@ func ConvertExpression(input sql.Expression, schema types.TableSchema) (query.Ex
 		return query.NewConstant(types.NewValue(e.Value)), "", nil
 	case *sql.BinaryOperation:
 		return convertBinaryOperation(e, schema)
+	case *sql.UnaryOperation:
+		return convertUnaryOperation(e, schema)
 	}
 	panic(fmt.Sprintf("unexpected sql.Expression: %T", input))
 }
@@ -74,6 +76,26 @@ func convertBinaryOperator(o sql.BinaryOperator) query.BinaryOperator {
 		return query.BinaryOperatorGe
 	}
 	panic(fmt.Sprintf("unexpected value for BinaryOperator: %v", o))
+}
+
+func convertUnaryOperation(o *sql.UnaryOperation, schema types.TableSchema) (*query.UnaryOperation, string, error) {
+	operand, _, err := ConvertExpression(o.Operand, schema)
+	if err != nil {
+		return nil, "", err
+	}
+	operator := convertUnaryOperator(o.Operator)
+	expression := query.NewUnaryOperation(operand, operator)
+	return expression, "", err
+}
+
+func convertUnaryOperator(o sql.UnaryOperator) query.UnaryOperator {
+	switch o {
+	case sql.UnaryOperatorIsNull:
+		return query.UnaryOperatorIsNull
+	case sql.UnaryOperatorIsNotNull:
+		return query.UnaryOperatorIsNotNull
+	}
+	panic(fmt.Sprintf("unexpected value for UnaryOperator: %v", o))
 }
 
 func FindColumn(input string, schema types.TableSchema) (index int, name string, err error) {

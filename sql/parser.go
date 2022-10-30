@@ -167,23 +167,44 @@ func ParseExpression(tokens *TokenList) (Expression, *TokenList, error) {
 		return nil, nil, err
 	}
 
-	token, err := tokens.Get(TokenTypeEq, TokenTypeNe, TokenTypeLt, TokenTypeGt, TokenTypeLe, TokenTypeGe)
+	token, err := tokens.Get(
+		TokenTypeEq, TokenTypeNe, TokenTypeLt, TokenTypeGt, TokenTypeLe, TokenTypeGe,
+		TokenTypeIs,
+	)
 	if err != nil {
+		// we've reached the end of the expression
 		return left, tokens, nil
 	}
-	op := tokenToOperator[token.Type]
 
-	right, tokens, err := ParseValue(tokens)
-	if err != nil {
-		return nil, nil, err
+	if token.Type == TokenTypeIs {
+		// unary operation
+		operator := UnaryOperatorIsNotNull
+		if err := tokens.Consume(TokenTypeNot); err != nil {
+			operator = UnaryOperatorIsNull
+		}
+		err := tokens.Consume(TokenTypeNull)
+		if err != nil {
+			return nil, nil, err
+		}
+		result := &UnaryOperation{
+			Operand:  left,
+			Operator: operator,
+		}
+		return result, tokens, nil
+	} else {
+		// binary operation
+		op := tokenToOperator[token.Type]
+		right, tokens, err := ParseValue(tokens)
+		if err != nil {
+			return nil, nil, err
+		}
+		result := &BinaryOperation{
+			Left:     left,
+			Operator: op,
+			Right:    right,
+		}
+		return result, tokens, nil
 	}
-
-	result := &BinaryOperation{
-		Left:     left,
-		Operator: op,
-		Right:    right,
-	}
-	return result, tokens, nil
 }
 
 var tokenToOperator = map[TokenType]BinaryOperator{

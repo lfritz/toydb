@@ -137,6 +137,38 @@ func TestBinaryOperationEvaluate(t *testing.T) {
 	}
 }
 
+func TestUnaryOperationType(t *testing.T) {
+	expression := NewUnaryOperation(NewConstant(types.Dec("123")), UnaryOperatorIsNull)
+	want := types.TypeBoolean
+	got := expression.Type()
+	if got != want {
+		t.Errorf("expression.Type() == %v, want %v", got, want)
+	}
+}
+
+func TestUnaryOperationEvaluate(t *testing.T) {
+	cases := []struct {
+		operand  Expression
+		operator UnaryOperator
+		want     bool
+	}{
+		{NewColumnReference(1, types.TypeText), UnaryOperatorIsNull, false},
+		{NewColumnReference(1, types.TypeText), UnaryOperatorIsNotNull, true},
+		{NewConstant(types.NewNull(types.TypeText)), UnaryOperatorIsNull, true},
+		{NewConstant(types.NewNull(types.TypeText)), UnaryOperatorIsNotNull, false},
+	}
+
+	row := sampleRow()
+	for _, c := range cases {
+		expression := NewUnaryOperation(c.operand, c.operator)
+		want := types.Boo(c.want)
+		got := expression.Evaluate(row)
+		if got.Compare(want) != types.ComparedEq {
+			t.Errorf("Evaluate returned %v, want %v", got, c.want)
+		}
+	}
+}
+
 func TestExpressionString(t *testing.T) {
 	constant := NewConstant(types.Dec("123"))
 	columnReference := NewColumnReference(1, types.TypeDecimal)

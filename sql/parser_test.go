@@ -25,13 +25,15 @@ func checkParser[T any](t *testing.T, name string, parse Parser[T], input string
 
 	ts, err := Tokenize(input)
 	if err != nil {
-		t.Fatalf("Tokenize(%q) returned error: %v", input, err)
+		t.Errorf("Tokenize(%q) returned error: %v", input, err)
+		return
 	}
 
 	tokens := &TokenList{input, ts}
 	got, remaining, err := parse(tokens)
 	if err != nil {
-		t.Fatalf("%s returned error: %v", name, err)
+		t.Errorf("%s returned error for %q: %v", name, input, err)
+		return
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("%s for %q returned\n%v, want\n%v", name, input, got, want)
@@ -208,6 +210,20 @@ func TestParseExpression(t *testing.T) {
 				Right:    Number{types.NewDecimal("45.6")},
 			},
 		},
+		{
+			"foo is null",
+			&UnaryOperation{
+				Operand:  ColumnReference{Name: "foo"},
+				Operator: UnaryOperatorIsNull,
+			},
+		},
+		{
+			"foo is not null",
+			&UnaryOperation{
+				Operand:  ColumnReference{Name: "foo"},
+				Operator: UnaryOperatorIsNotNull,
+			},
+		},
 	}
 	for _, c := range cases {
 		checkParser(t, "ParseExpression", ParseExpression, c.input, c.want)
@@ -217,6 +233,7 @@ func TestParseExpression(t *testing.T) {
 		"",
 		"'hello' = ",
 		" = 'hello'",
+		"4 = is null",
 	}
 	for _, input := range invalid {
 		checkParserInvalid(t, "ParseExpression", ParseExpression, input)

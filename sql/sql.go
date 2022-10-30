@@ -173,7 +173,7 @@ func (o *BinaryOperation) String() string {
 		o.Right.String())
 }
 
-// A BinaryOperation is an operator with two operands.
+// A BinaryOperator is an operator with two operands.
 type BinaryOperator int
 
 const (
@@ -200,4 +200,36 @@ func (o BinaryOperator) String() string {
 		return name
 	}
 	return fmt.Sprintf("unexpected binary operator: %d", o)
+}
+
+// A UnaryOperation is an expression with a unary operator, for example "name is not null".
+type UnaryOperation struct {
+	Operand  Expression
+	Operator UnaryOperator
+}
+
+func (o *UnaryOperation) String() string {
+	return fmt.Sprintf("UnaryOperation(Operand: %s, Operator: %s)",
+		o.Operand.String(), o.Operator.String())
+}
+
+// A UnaryOperator is an operator with one operand.
+type UnaryOperator int
+
+const (
+	// comparison with null
+	UnaryOperatorIsNull UnaryOperator = iota
+	UnaryOperatorIsNotNull
+)
+
+var unaryOperatorNames = map[UnaryOperator]string{
+	UnaryOperatorIsNull:    "IsNull",
+	UnaryOperatorIsNotNull: "IsNotNull",
+}
+
+func (o UnaryOperator) String() string {
+	if name, ok := unaryOperatorNames[o]; ok {
+		return name
+	}
+	return fmt.Sprintf("unexpected unary operator: %d", o)
 }

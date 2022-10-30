@@ -156,3 +156,62 @@ func (o BinaryOperator) String() string {
 	}
 	panic(fmt.Sprintf("unexpected BinaryOperator: %d", o))
 }
+
+type UnaryOperation struct {
+	Operand  Expression
+	Operator UnaryOperator
+}
+
+func NewUnaryOperation(operand Expression, operator UnaryOperator) *UnaryOperation {
+	return &UnaryOperation{
+		Operand:  operand,
+		Operator: operator,
+	}
+}
+
+func (o *UnaryOperation) Type() types.Type {
+	return types.TypeBoolean
+}
+
+func (o UnaryOperation) Check(schema types.TableSchema) error {
+	if err := o.Operand.Check(schema); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (o *UnaryOperation) Evaluate(r *types.Row) types.Value {
+	value := o.Operand.Evaluate(r)
+	var result bool
+	switch o.Operator {
+	case UnaryOperatorIsNull:
+		result = value.Null()
+	case UnaryOperatorIsNotNull:
+		result = !value.Null()
+	default:
+		panic(fmt.Sprintf("unexpected UnaryOperator: %d", o.Operator))
+	}
+	return types.NewValue(types.NewBoolean(result))
+}
+
+func (o *UnaryOperation) String() string {
+	return fmt.Sprintf("UnaryOperation(%s %s)", o.Operand, o.Operator)
+}
+
+type UnaryOperator int
+
+const (
+	// comparison with null
+	UnaryOperatorIsNull UnaryOperator = iota
+	UnaryOperatorIsNotNull
+)
+
+func (o UnaryOperator) String() string {
+	switch o {
+	case UnaryOperatorIsNull:
+		return "isNull"
+	case UnaryOperatorIsNotNull:
+		return "isNotNull"
+	}
+	panic(fmt.Sprintf("unexpected UnaryOperator: %d", o))
+}
