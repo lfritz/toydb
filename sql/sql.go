@@ -132,7 +132,7 @@ func (s String) String() string {
 	return fmt.Sprintf("String(%q)", s.Value)
 }
 
-// A Boolean is as SQL boolean literal.
+// A Boolean is an SQL boolean literal.
 type Boolean struct {
 	Value bool
 }
